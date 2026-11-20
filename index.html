@@ -1,6 +1,47 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}#editWrap,#esgAbrirBtn,#bibliotecaWrap,#importWrap,#pedidosWrap{display:none!important}
 </style></head><body>
 <script>
+// ===== Dados da loja: nome, WhatsApp e Pix =====
+// Ficam em loja.json, no projeto do site. O dono muda pelo painel (aba Configurar > Dados da loja).
+(function(){
+  var PADRAO = { nome: "Adega dos Brutos", whatsapp: "11926190514", pixTipo: "celular", pixChave: "11926190514",
+    pixTitular: "Walter Henrique de Lima Júnior", pixBanco: "PicPay", pixCidade: "Embu das Artes", dono: "", email: "" };
+  window.LOJA = Object.assign({}, PADRAO);
+  function so(d){ return String(d || "").replace(/\D/g, ""); }
+  window.lojaSoNumeros = so;
+  window.lojaZapFmt = function(d){
+    d = so(d); if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2);
+    if (d.length === 11) return "+55 " + d.slice(0, 2) + " " + d.slice(2, 7) + "-" + d.slice(7);
+    if (d.length === 10) return "+55 " + d.slice(0, 2) + " " + d.slice(2, 6) + "-" + d.slice(6);
+    return d;
+  };
+  function pintar(){
+    var L = window.LOJA;
+    document.querySelectorAll("[data-loja]").forEach(function(el){
+      var k = el.getAttribute("data-loja");
+      el.textContent = k === "whatsapp" ? window.lojaZapFmt(L.whatsapp) : (L[k] || "");
+    });
+    document.title = L.nome;
+    var h = document.getElementById("titulo"); if (h) h.setAttribute("aria-label", L.nome);
+  }
+  window.adegaAplicaLoja = function(o){
+    if (!o || typeof o !== "object") return;
+    Object.keys(PADRAO).forEach(function(k){
+      if (o[k] == null) return;
+      var v = String(o[k]).trim();
+      if (v || k === "dono" || k === "email") window.LOJA[k] = v;
+    });
+    pintar();
+    try { window.dispatchEvent(new CustomEvent("adega-loja")); } catch(e) {}
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", pintar); else pintar();
+  fetch("loja.json?t=" + Date.now(), { cache: "no-store" })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(o){ if (o) window.adegaAplicaLoja(o); })
+    .catch(function(){});
+})();
+</script>
+<script>
 // ===== Dados da Adega guardados no GitHub da própria Adega =====
 // Clientes: o catálogo vem de produtos.json (público).
 // Dono: com a senha, o painel abre a chave guardada (trancada) em acesso.json e grava no GitHub:
@@ -88,6 +129,7 @@
   }
   async function carregarDono(){
     var p = await lerJSON(SITE, "produtos.json"); if (p) { PROD = p; avisar("itens"); }
+    try { var lj = await lerJSON(SITE, "loja.json"); if (lj && window.adegaAplicaLoja) window.adegaAplicaLoja(lj); } catch(e) {}
     CUST = (await lerJSON(DADOS, "custos.json")) || {}; avisar("custos");
     var pasta = await api("GET", DADOS, "movimentos"); MOVS = {};
     if (Array.isArray(pasta)) {
@@ -111,7 +153,7 @@
     var a = await acessoGuardado();
     if (!a) { window.ghPrecisaConfig = true; var box = document.getElementById("pdConfig1"); if (box) box.hidden = false; return false; }
     try { token = await destrancar(a, senha); } catch(e) { return false; }
-    try { await carregarDono(); } catch(e) { token = null; window.ghErro = e && e.status === 401 ? "A chave do GitHub venceu ou foi apagada. Configure de novo na aba Configurar." : "Não consegui falar com o GitHub. Confira a internet."; return false; }
+    try { await carregarDono(); } catch(e) { token = null; if (e && e.status === 401) { window.ghErro = "A chave do GitHub foi apagada ou venceu. Cole a chave nova logo abaixo e crie a senha."; var bx = document.getElementById("pdConfig1"); if (bx) bx.hidden = false; } else window.ghErro = "Não consegui falar com o GitHub. Confira a internet."; return false; }
     return true;
   };
   // primeira vez: cola a chave do GitHub e cria a senha
@@ -132,6 +174,13 @@
     var tr = await trancar(token, nova);
     await gravarJSON(SITE, "acesso.json", tr, "Senha do painel trocada");
     acessoMem = tr; return true;
+  };
+  // dados da loja (nome, WhatsApp, Pix)
+  window.ghSalvarLoja = async function(obj){
+    if (!token) throw new Error("Entre no painel primeiro.");
+    await gravarJSON(SITE, "loja.json", obj, "Dados da loja alterados");
+    if (window.adegaAplicaLoja) window.adegaAplicaLoja(obj);
+    return true;
   };
 
   // ---------- o "banco" que o site usa ----------
@@ -609,7 +658,7 @@ h1{
   <div class="masthead"><div class="masthead-in">
   <header class="hero">
     <span class="tag">Pré-inauguração · Lista de preços</span>
-    <h1 id="titulo" class="ticker-title" aria-label="Adega dos Brutos"><span class="ticker-track"><span class="ticker-group">Adega dos Brutos</span><span class="ticker-group" aria-hidden="true">Adega dos Brutos</span></span></h1>
+    <h1 id="titulo" class="ticker-title" aria-label="Adega dos Brutos"><span class="ticker-track"><span class="ticker-group" data-loja="nome">Adega dos Brutos</span><span class="ticker-group" data-loja="nome" aria-hidden="true">Adega dos Brutos</span></span></h1>
 <script>
 (function(){
   var h = document.getElementById('titulo');
@@ -976,7 +1025,7 @@ window.pagamentoEfetuado = function(){
         <summary>Ver texto do pedido</summary>
         <textarea id="pedidoTxt" readonly rows="10"></textarea>
       </details>
-      <p class="ck-note">O pedido abre direto no WhatsApp da adega. Pague pelo Pix com o número que aparece no pedido e, depois, encaminhe a mensagem e o comprovante do pagamento para a Adega no WhatsApp <b>+55 11 92619-0514</b>. Se o WhatsApp não abrir, toque em Copiar pedido e cole na conversa com a adega.</p>
+      <p class="ck-note">O pedido abre direto no WhatsApp da adega. Pague pelo Pix com o número que aparece no pedido e, depois, encaminhe a mensagem e o comprovante do pagamento para a Adega no WhatsApp <b data-loja="whatsapp">+55 11 92619-0514</b>. Se o WhatsApp não abrir, toque em Copiar pedido e cole na conversa com a adega.</p>
     </form>
   </section>
 
@@ -1249,13 +1298,59 @@ window.pagamentoEfetuado = function(){
 
       <!-- CONFIGURAR -->
       <div class="pd-sec" data-sec="configurar" hidden>
-        <h2>Configurar <span>// senha do painel</span></h2>
+        <h2>Configurar <span>// loja, senha e contas</span></h2>
+        <div class="pd-caixa" style="display:grid;gap:12px;max-width:760px">
+          <h3>Dados da loja</h3>
+          <p class="exp">Mude aqui e aperte Salvar. O site inteiro passa a usar os dados novos: o botão do pedido no WhatsApp, a mensagem do pedido, os textos para o cliente e o código Pix. Para todo mundo ver, leva cerca de 1 minuto.</p>
+          <div class="pd-campos">
+            <label>Nome da adega<input id="ljNome" maxlength="40" autocomplete="off"></label>
+            <label>WhatsApp da adega (com DDD)<input id="ljZap" inputmode="tel" placeholder="(11) 99999-9999" autocomplete="off"></label>
+            <label>Nome do dono<input id="ljDono" maxlength="60" autocomplete="off"></label>
+            <label>E-mail da adega (Gmail)<input id="ljEmail" type="email" placeholder="nome@gmail.com" autocomplete="off"></label>
+          </div>
+          <h3 style="margin-top:6px">Pix</h3>
+          <label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--txt)"><input id="ljPixIgual" type="checkbox" style="width:auto"> A chave Pix é o mesmo número do WhatsApp</label>
+          <div class="pd-campos">
+            <label>Tipo da chave<select id="ljPixTipo"><option value="celular">Celular</option><option value="cpf">CPF ou CNPJ</option><option value="email">E-mail</option><option value="aleatoria">Chave aleatória</option></select></label>
+            <label>Chave Pix<input id="ljPixChave" autocomplete="off" spellcheck="false"></label>
+            <label>Nome de quem recebe<input id="ljPixTitular" maxlength="60" autocomplete="off"></label>
+            <label>Banco<input id="ljPixBanco" maxlength="30" autocomplete="off"></label>
+            <label>Cidade<input id="ljPixCidade" maxlength="30" autocomplete="off"></label>
+          </div>
+          <div class="pd-linha-botoes"><button id="ljSalvar" class="pd-btn ouro" type="button">Salvar dados da loja</button></div>
+          <p id="ljMsg" class="pd-msg" role="status" aria-live="polite"></p>
+          <p class="exp">Os cartazes e papéis impressos não mudam sozinhos.</p>
+        </div>
+        <h3 style="margin:6px 0 0;font:700 13px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--neon)">Senha do painel</h3>
         <p class="exp">Troque a senha do painel quando quiser. A senha nova vale em todos os celulares e computadores depois de cerca de um minuto.</p>
         <div class="pd-caixa" style="display:grid;gap:12px;max-width:520px">
           <label>Senha nova<input id="pdNova1" type="password" autocomplete="new-password"></label>
           <label>Repita a senha nova<input id="pdNova2" type="password" autocomplete="new-password"></label>
           <button id="pdNovaBtn" class="pd-btn ouro" type="button">Salvar senha nova</button>
           <p id="pdNovaMsg" class="pd-msg" role="status" aria-live="polite"></p>
+        </div>
+        <div class="pd-caixa" style="display:grid;gap:12px;max-width:760px">
+          <h3>Contas da adega: Gmail e GitHub</h3>
+          <p class="exp">A senha do Gmail e a do GitHub não ficam guardadas neste site, por segurança. Elas só podem ser trocadas no próprio Google e no próprio GitHub. Os botões abrem a página certa.</p>
+          <div class="pd-linha-botoes">
+            <a id="ljGmailSenha" class="pd-btn fantasma" style="text-decoration:none" target="_blank" rel="noopener" href="https://myaccount.google.com/signinoptions/password">Trocar senha do Gmail</a>
+            <a id="ljGmailFone" class="pd-btn fantasma" style="text-decoration:none" target="_blank" rel="noopener" href="https://myaccount.google.com/phone">Trocar celular do Gmail</a>
+            <a class="pd-btn fantasma" style="text-decoration:none" target="_blank" rel="noopener" href="https://github.com/settings/security">Trocar senha do GitHub</a>
+            <a class="pd-btn fantasma" style="text-decoration:none" target="_blank" rel="noopener" href="https://github.com/settings/emails">Trocar e-mail do GitHub</a>
+            <a class="pd-btn fantasma" style="text-decoration:none" target="_blank" rel="noopener" href="https://github.com/settings/personal-access-tokens">Chaves do GitHub</a>
+          </div>
+          <details>
+            <summary style="cursor:pointer;color:var(--txt)">Passo a passo para quem comprar a adega</summary>
+            <ol class="exp" style="display:grid;gap:8px;padding-left:20px;margin-top:10px">
+              <li><b>Senha do Gmail:</b> toque em Trocar senha do Gmail, entre com a senha atual e digite a senha nova duas vezes.</li>
+              <li><b>Celular do Gmail:</b> toque em Trocar celular do Gmail e coloque o seu número. É ele que recupera a conta se a senha for esquecida.</li>
+              <li><b>Quer outro e-mail?</b> O endereço de um Gmail não muda. Crie um Gmail novo, toque em Trocar e-mail do GitHub, adicione o e-mail novo, confirme pelo link que chega nele e marque como principal (Primary). Depois escreva o e-mail novo aqui em Dados da loja.</li>
+              <li><b>Senha do GitHub:</b> toque em Trocar senha do GitHub e use Change password.</li>
+              <li><b>Cortar o acesso de quem tinha antes:</b> em Chaves do GitHub, crie uma chave nova (Repository access: os projetos adegasdosbrutos-lgtm.github.io e adega-dados; Permissions: Contents, Read and write) e apague a chave antiga "Painel da Adega". Na próxima vez que entrar no painel, ele pede a chave nova e uma senha.</li>
+              <li><b>Não troque o nome de usuário do GitHub</b> (adegasdosbrutos-lgtm). O endereço do site depende dele.</li>
+              <li>Por último, troque a senha deste painel aqui em cima e confira o WhatsApp e o Pix em Dados da loja.</li>
+            </ol>
+          </details>
         </div>
         <div class="pd-caixa">
           <h3>Onde ficam as coisas</h3>
@@ -1313,7 +1408,7 @@ window.pagamentoEfetuado = function(){
   </div>
 </section>
 
-  <p class="foot">Adega dos Brutos · 2026</p>
+  <p class="foot"><span data-loja="nome">Adega dos Brutos</span> · 2026</p>
   <span class="beijo-canto" aria-hidden="true">💋</span>
 </div>
 
@@ -1789,10 +1884,27 @@ window.pagamentoEfetuado = function(){
   }
 
   // ---------- finalizar pedido ----------
-  var PIX_CHAVE = "+5511926190514";   // chave Pix (celular)
-  var PIX_NOME = "Walter Henrique de Lima";   // nome no código Pix (máximo 25 letras, sem acento)
-  var PIX_TITULAR = "Walter Henrique de Lima Júnior"; // nome completo do dono, mostrado na página e na mensagem
-  var PIX_BANCO = "PicPay";
+  // WhatsApp, Pix e nome vêm de window.LOJA (loja.json, mudado pelo painel do dono)
+  function LJ(){ return window.LOJA || {}; }
+  function pixLimpa(t, n){
+    var x = String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+    if (x.length <= n) return x;
+    var c = x.slice(0, n), sp = c.lastIndexOf(" ");
+    return sp > 0 ? c.slice(0, sp) : c;
+  }
+  function pixNome(){ return pixLimpa(LJ().pixTitular, 25) || "ADEGA"; }
+  function pixCidade(){ return pixLimpa(LJ().pixCidade, 15) || "SAO PAULO"; }
+  function pixChaveFmt(){
+    var c = String(LJ().pixChave || "").trim(), t = LJ().pixTipo || "celular";
+    if (t === "celular") { var d = c.replace(/\D/g, ""); if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2); return "+55" + d; }
+    if (t === "cpf") return c.replace(/\D/g, "");
+    if (t === "email") return c.toLowerCase();
+    return c;
+  }
+  function pixChaveMostra(){ return (LJ().pixTipo || "celular") === "celular" ? window.lojaZapFmt(LJ().pixChave) : pixChaveFmt(); }
+  function pixTipoTxt(){ return { celular: "celular", cpf: "CPF/CNPJ", email: "e-mail", aleatoria: "chave aleatória" }[LJ().pixTipo || "celular"] || "celular"; }
+  function pixQuem(){ return LJ().pixTitular + (LJ().pixBanco ? " (" + LJ().pixBanco + ")" : ""); }
+  window.addEventListener("adega-loja", function(){ try { if (!$("pagar").hidden) renderPedido(); } catch(e) {} });
   var codigoPedido = "";
   var uidCliente = null;
   // Cartão de crédito/débito: deixado pronto, escondido. Mude para true quando a conta da empresa de pagamento estiver ligada.
@@ -1803,7 +1915,6 @@ window.pagamentoEfetuado = function(){
   function confereSenha(v){
     return window.adegaConfereSenha ? window.adegaConfereSenha(v) : Promise.resolve(false);
   }
-  var PIX_CIDADE = "Embu das Artes";  // cidade do titular
   var TAXA = { domicilio: 7 };
   var BANCOS = [{"n":"Nubank","u":"https://play.google.com/store/apps/details?id=com.nu.production","img":"data:image/webp;base64,UklGRjwEAABXRUJQVlA4IDAEAABQGACdASpYAFgAPikSiEKhoSEU7FxQGAKEoAzqQm/H3wdx/4B+n/5b8pP6r2nvFV/ufVF8wH66erV6OfQA/V/rO/QK/Zn00PZb/an9qvZ01WuNf66ZTj8J+Q4UbgKafnoiOyIegU3Xf7OYFaw16BpxMMfHm9Ff8DZFa4U0cvogI0eAsuRNYvRd4ZXCNyDwyIBKij1bQh3ymy0qJnM1aIwZqYC1R78v0ci2el4wgPdl6anEzaLpW3WQAzF+cf2l7mWlYHwjwZcOb80TAAD+//8xDeaTiqEOaPsqygYzLTjSzXw0IHWTOpuLD+HrRqlPvfhE+T2AI+YDyC23/bJwjE1R6oDaJCZ0ivbirNdOb+F1295Mkg8M6JTktULg2vX22WgYf4KQ5GQgdwuuNV2fUtKSF5Csb7jAuu+T0qzucFrWDF4duAf1lQJqx6be39x4zdT/51l/KC3ssNQ6uoOJU5WG9tUUhkWzRGHIxw6/P8gs2kCQ/nQImO3oV24ZwzgpsD0dv/jhhAP1TCk7G1qU8ZTmdXpdh9J4SEwwV6Ns3YAig0MgWffCcAIfX3gBD2MO7/9iHjPh+OxmMMh9uggBPqf8n8rL/DX1vj5kmXKYifGRpbBQdsl15S5Fbuxmd2G0c+T6is4Q8OF4A9wGawLFDnQJc4FzpgxYkNhefjIFtuWayWw3xuUFuhlvspbq5EKPA5Eu0tHZxS/JH8/Yj+M5pplSjYhnTyxtf8HJc++u2f//g7v8yAD/3R3l7blJcvkmKrk7LiWmb3sX4z6v+lXR2Jl6bgmZA4Qw24vQ5P+yGHm5zqcn35gY8rNr0Eqf729gabZ+l76yPdVTLh6vcrPQVRMbqxlmeleTNSoV8yEPMa90u6VjZ1d6LfNpV70/WjdjDvI8sb5mf3QYkKtWYVHAWztCq3T6zdz9QjSq34z2X1hrQa129+ZLQp39o4oXySwjL00ld/X72i1TEJUhKGm5z0XT/QeqCQAF+6NOMo5AF4jtxTr2K70owIePitHLT2X7msMlGwSZchme9Rey4YuR6A+JFI+cLG0REPlbYAfGidsrMXHBud7AX5AvgV0sBFWnYaxFRof9eRGopUmI91jZMxNxVQc2yY3Df52ANi7YNsLyTyipwjCvOFsrGVlk7lZYMn0JzFreERqa1gZeBnxn2TeM18M/po4jdqe/FGvtOX+s/DleVsVaeOoWjbfYj6P/Q+GO0nSqOFPqthKfG2/R2b/GciMw+y5V3RnDrDT9acfqYU+e6O0PvZQG9saXZa+Rznncw4aoB+hp41Xx7wtXee+Ic8bEA9gLMGS0Rrhqd8IK9eSWP4HmZOe9JWlaYlIOGeypd6XA5t27GmTwlOWl6M8AlLIONamrWRqTSaEHJCDRCmEBE1jmGgGwG6KKa6RHIv+dAEkIUTdPRR0qBy6fwAAA"},{"n":"Banco Inter","u":"https://play.google.com/store/apps/details?id=br.com.intermedium","img":"data:image/webp;base64,UklGRsYCAABXRUJQVlA4ILoCAAAQEwCdASpYAFgAPikUiEMhoSERzARAGAKEsoBovwCfJ/reSMFO6f2Z/ID5C+iH8vbyDzAfrB+mfu8f5bojut59AD9YOtU/bz0cP/oA+hCmXxuJl+OsF6/49EpnDlBgsiIMTUZqUGw1Nzoxc6pkKi7mivveVQgAFIidA4pJfZFOzGhXuDTEOwu6ixpzr57btOcexYoNNbTJ3/1OVuGa2UpUAAD+//5iEVU7txaoqwzudMn+WouDrCn++QIC3cI6CNzcx8bzNR9Cq2uBYoB0sG4xd6ep/zb333QYWfPNUNDgSk1JEKxP5PaXhqJN+sD+mxi2bQrZ7nRFxVdwon4bR8JpN9TlhJcXTsnEuUJZ00vNAqTLkCesitKiOxdBnC3hze6n60S2fp0LU1pw0kBaCwDrf2Tvqdg1rFUkwVH9yZ30bPLH/PDLrzRJDDDKkNuU60d1JRvk3RZftaVHHI136Yv+MblsGyHxb//EJ0QyGicmz9/Z858vVx/GW7pCdgmdiv/m2fuSEM/8Tg5hHdi8flhgD7qBW/F/+iWWVb69Z+T8B05jdaj3uB3PiMrm4pp/2yL/MeXBLrQaFhpjdj9hH4B4BPqtm6m2rh2Fm8CcJyoxpmywrKheC6Apm6rLsL++ezGThV1a/qaEdr8pVwnvQy6IJ5ZOtJPJQLgGYLa/0rk9p5r9OhwwMlbp4j9lhAhk0g0Yay3BCaPA8pdzWNcgQZitlBpEb0/BhCPqV4u/atAh0IcLgXYDLB1/TFSj2qW3zJMXpMSxF2vHAEYofG8gWHZeyIlDiO0P0fdw5Lab0KmHjMsMSvtrzTA1E85JQFws9gcpDzkZS12K11iC2K/0Tp/3fXLmbGXINDElkm0YhVAg38Y62NEKzTS9mhOSxDkoD1CqMVuR8vWwQVxveDVEeN7BBlboQkZWAAAAAA=="},{"n":"C6 Bank","u":"https://play.google.com/store/apps/details?id=com.c6bank.app","img":"data:image/webp;base64,UklGRhIDAABXRUJQVlA4IAYDAADwFACdASpYAFgAPikUiEMhoSERzARgGAKEtIBqH6tLsNtnzAH6q6wB+s3sAdKXLZfxZyhL4D8ac/Z+RGWlezM4/7r30r/yVEIoqMCgNMCiUq5mlvT2T8oVKDnnr9kOVgZdi1SRAeVk/KeFBUSi1S8Y7bQqpdjAi4aIw87FvPrfPm8iXLf24iIDNHzR5fCRjDeeq0wCUazuQeDtABa1ab+7lw7LQOVdLkdFBphRrLEOwAD+//5iNX7958l7s0Q2ZuJLp65jb6iVAjYKTFXlvYFAknn6BejOYPQCznXtFGRqpROoXHH75/vzP6UPeXnDnBSxoGEwrsZqKNN54yEBnrdtWqf0xAoAQ8R8M6dMBlOFpzUZrZd2fn7mz6grv8xCTfbGMEP+0YpmhU+b7giHmCP766dhyLgms7E3xcHG/gWP40+jm0PfpumaThxHf7/D0xu33JFzPjmJUtOFZLg5x8vTyGX+GnL74o9O13KROQsskXTn/c2Y/uEl4l8fLUutYH9ODVw/jt/yWU37oAhDagEIDYVVDqyTmCuKFpTJfy5d5nSPQKtU8r+5CZxRtQ8xR2h5AkpZ22xPrk6z42fokgnDfjEC53Ani6ue3aSaw43ZRw1diETPZbhPSVqVvNYY664ECT/fBkuXvv00LxejT9Fl6F/V9xt91J1t/qqNt0xv7EtKdy26F9gMXYNA0bfFxBNAC86KsjYG7G+AxDNlhEg7AvjOG//4yTsWtBnkrNPtMN9cLHAKVrOHkvOcqpPGVE84PMCba2hQRTvTFiFiDIvE0ba5QCDAK0SJb6j8S5lhT9hPsyB2Yf2LLJr8SgeHMuLj7OuxPBjlTgjnnlWcw519hyNJs1aIj5GSuaRM9v5AN7xGE3V8519cxy6v16jjOkoObZRLZQftE0eAt6/miqmdpyaqR+mqRe6VDYVp4f4OIRuX4FuvIceoYVPdpA9a6yJ+D3SxRRVs4QhFiEuIXjb8Wrpyf7+H5GlLcgnERNm5kZ9u01rzQnwtsLPTJfAhjwLUAAAAAAA="},{"n":"PicPay","u":"https://play.google.com/store/apps/details?id=com.picpay","img":"data:image/webp;base64,UklGRgoEAABXRUJQVlA4IP4DAAAwFwCdASpYAFgAPikSiEKhoSETnfxsGAKEoAwn5AXx6U/mN95j9vWLQHY18SPpkeYD9Wf1j93n/D+q78ZvcA/ZXrTvQb/Zn03fZk/cr0ev/prJwI0IFIkciDiN5bIefAZA80s9TD8yJPwuq6tTA20EpPzSrp8vN5POlfoUWkXLMXln2n7hqJ61gryvzttUw6sM/m7imIp1b7h+zWVt91SlB8Ey6Rx/PqXUzlzAiQPDheSXYJ8NXDLh+U1PYIK5s62zAAD+//8xC50RePKd9vIaCJlxdbSyRVmcqMqsJtp4Fc/2otYCeQCWmsQt6KBQDd1h9UZHGwjzmJAxQx7xYQESwxQ+UVdSZoAYjx2z3vVuU37/89xsOGTwrmBuQ0V/Rgzt6yMDo/HrC4lp4vGJoba/qSr0zZ8zuRKW44ENm6diWwyEPrn4I+Z3r3P4ZOSP3+T/8OWf0302PPI5i7bvS+WEXCwOhTQOSeEZWz4TOFRdFrDbie10JlcICbNjem12uPl5LZ4z9lPBxodYNeWWzPHD8YYTMPz/jZW6k+Kx/98bx22zW5C+cGWlWgc2X9rw8UNrXfM56nwtYStDz+APTFxRYcHp3CdlQjTAMtO/vs60fzrbdCv9H1U2QuL/D+9wFjAqvkN84lwQfVNI79w+PAFqvi5WsGK+gk/1PQOOr83W4lOl074+P7uf+G86AQaz3CgY2PjPH/ifmSxH4GACnKULMIPdiHcpRxAdjnCGk+P8046xjnMDFjlQ3+AHNyI+URcSoLjjCDqF0kAsf2NPcT8WjzXhebmTL+0oVw/rt2xTA3tfOPdM/+spFqZhN3ftDb3l7xqstK//0tRWSbWuq2xvs7p3orXlz6TVYpiDoEN1hbD5ENHNZpywfvnHC/n67r/LLwhWPJCxiWXuVYcYwCEwnHSgAWowU/qb5PwKw+YO4+4BDahkoAb0kT+783FTe6dCW2fWgPN/rRUfy+eKyhYZupMVfZF9P5lIU/eY9qJ1u9H/agSlFeQEjFz+zXtHjhu54lv6lZXHxFE/M6bRaheiLdPmces86rO+UIcbF8DzI/tS1sIL5Ef3NoxQoW+ToDD8um7D1F+tfcPfDT5oBUSqmJMTQfqGRQGwCRkz4GnXqr78sigO0c8+nllSb9hojz/qk/NcCqBokKMwBq8P7vKyu6SmE65OPz157IMa1vrhDDW6kvVqnyuiqjyo+Jxy72/W2S0UK5YskT2HVeF3fXTmsuhpaJxOjHK06BIEeWrSOMjKrlMOzE5/qjjA2uabsUmIeLorqa18Ad6h1LrplFi38InF5J70y6Wn6gijGkxmbl0NQPyy45+qUhTPUE4VMXHb9AR1uypAjTpb7AAAAA=="},{"n":"Mercado Pago","u":"https://play.google.com/store/apps/details?id=com.mercadopago.wallet","img":"data:image/webp;base64,UklGRgIFAABXRUJQVlA4IPYEAAAwGgCdASpYAFgAPikSh0KhoQnOAkgMAUJQBk4RBvr0j/Mcs56h6w3r/r/Yd90m+b/ZL1Dfrx+t3u5+jX/C+oB/hv7p1qHoAfsd6Yv7YfCP+1H7d/AT+sv/gp075bIF2TvxGcDQQxNJ81ib24h/IguC54BvswK8jEMj3F0M3I4dzuW8pP3c7jZprtynIRx5AspHTjvsy9JEVZqhwgIkhCc9BC5vJJCp7QHLl1lkNxSE3ftTKa5gNeRKY7JYdgmG+nB6+QdFFaUFUg4+SataH3C5FD4sipPreKOAAAD+//6UKz7xqp7Hzp1G9nfzkbDC+UbGQ5qnJnqD0Fuo7mxqspY+P3aeLvMGx3FTgB+dus3dQXI2BbU6t/wOEJLQSaAnKtOt9sLQuvKwxWJRER7oP8Y174dnzquqw1e8AlTwgfaTDdst49OOqR7B0PpxKeinL1VJK7tYGSmyrfVD8RwlOef/ZMhH1WXvwkPhRiB9Drkc/465B7/eNd/OCZGPGXvlmfNvLrR4B+pN0C5abbeYe5sXc9CtGYFxo+JghT+16TQk96e7jyjJHhF4ytUY73iENdH2YKA2U7IBfxpUyty4jk4KmTaCRRdRT1ZA4T80NICv1ugVkSdiN/Jl42s/nJkQ62BgW7SeuzwA7oQZRs/d39lQ6/LDTPsv8/jws7xZRFgMpK9z6vVNso1vrFUej17r+hP5ygxwaWuXKjh+WTnnc08tbGR1JlFI0CXQnf+IbBdRPOmDoJ5Cl3+FowrNeJtw+bNDDF6yCCf6Cteg6Z4H6qe6a+4pmcyrAubYJebbXwYQLjcrmUSYDoF2OcXzpA3bv34VEzkcxCJ/2K+03WuROpSXaN15owvFYTWnLuL5JylPw6tpWK9+39KHtU3xgnV7zt/fvMZ8G0wmpouJU3oqKy30jz8uzQFw/sOw9ECt4jsc41jp/DYO5VOLqK+A9L0pEN9koDbAWmGfS4YrTzDavNq10A2X+hfh8vDFabSJ6tv2/82en5DiG02EzStnfMW4orn1GKQX6dQpLfcgSh3KhQKxy+OTnYBsGV8ZN1vANn9g/K9hXBc2f7teNjst19KX1opsxPL5EsKcpG10TEOWYnhGLmc359ldQyTULT4L11TGtCV85y/dgT8XkwbyEsPLaHGNNsJc0LSdg10VMiR6Lga/x4ehlzyDgfiDbc5z6/ams5O04GXPV2Rpt8V0EZTS/GVINYIKbu/K43ethCqDvj0ng2Pf+oeQFSICaOp69nQqxy8VSBTccybgxl8IqtDTtlQbb6CmDMhajtzIByshHbuvdLkohYS4TA1T+5F+CfpMC1BpvfVqN/cPu/xUXWtx/sVcFbzn7haG5Gv8HyPxjTK2bDwSk7Fjmzkch9HBw2PNubOX/R0SFzyORyrSGh+VNoHxigJJ8O9CqiNjEcP4GRVOwG93IXL9CEMz8gY5B3wurYZLcuVSdG4utzfEvmCw1sOOp+oHM/kbxCOz3KI20k7L/KprJ9fhz68f1ZGM7v/A5hFcnMRmthfzwCLa9yTEfWMqEkadEzaD8h+b22X5l86xYR9Gms8jPDsjOQQ59gRcI/v7T27x2nEcfAHQq9n3cg17zgsWLCWHiX1mPF0JaFo3hYL321XHTt3JtmfN1E2TBadVbWu/66As8AylsXv8Y+ptFI9kCVRzdYANEkooRDzgpKu2AAAA"},{"n":"PagBank","u":"https://play.google.com/store/apps/details?id=br.com.uol.ps.myaccount","img":"data:image/webp;base64,UklGRpwCAABXRUJQVlA4IJACAAAwEgCdASpYAFgAPikUiUMhoSERXVQgGAKEsoBnV6VeA13zyl/HPu5APVHtk/GS/qvtK9IB+gHAIeW37OP7L/sz7Sq5APxmBBpEqHkX4CpYpxFhkuJpnmUE53QOYNSfD5/03Yha01N1gEPzz3IVCx4R+botbkFvdG3XU3j+mCnTXhdkuf9JrmUfz9kYoBVo0gNyYURZ4qU7fwMAAP7//iaQgOnxQO05Of2eBn/RXWCqm1Sr0Mu5z4rwggc4CZQBrwNSKCEYNG9TXn/amx6Shhv4H3Xk6KhJ3R5jqorraTnghoHox6t9aOTwHLP/u26i4hZx6wCjHJv959xdPf6HcD4y8VwWTaSRqItrYH4cREqi6O5EsNsV622+z3uaOf9eOG/9/CF1PuIsGGv8dvOOAtjbayT/xOH30vM64hSKZW76hV+vf9RtdPZ0y8v3/OSnrXGqksW5/hHV/DIfD3oT9WBielJBf5Z/n9voPvxwRfNRouby16Z8Zx//Air+Kf/ZUvOQE3N835sMpn87hOVWf9ebPsM1UxGPWsRmRn0mt+Do89RZP3hB8MtOdjeoWAo2nAwHQ3NKYhJd4eihojtPFNMzphGFlv3kNTgPqn4COrG8VXuLtEIikI8PnrO7lHT5FvmN5QlGxOCKGgiNsW/ki2zINLKkVXwWdogNOmdtzbFsHX9DghwZXRVTDcAlmSDHBg5wT4+brxgYpChgWqMX50pK3808TKJj0UL7jJYthxyzjH7YW3oSQwd2ckbbhWX8XQhwiT2+pRaJeg1HXFcsbwxsWYR0EJ4sG/2aHD38U95yRTcrEXBjsHayl5a4LLXe0ZXzKKT1cPFU6yKaRWW9ZmoZUHnoYGotZ6PEnRs794AAAA=="},{"n":"Next","u":"https://play.google.com/store/apps/details?id=br.com.bradesco.next","img":"data:image/webp;base64,UklGRhoEAABXRUJQVlA4IA4EAAAQGQCdASpYAFgAPikUiEKhoSETnAQkGAKEoAzxx5H2cX2YDryz9ehPxQ+kl5gP1u/V3hAP0760P0D/2M9MD9nvhR/Z39kvgA/Zn//06J8L+TmUp/GZxj/AY7ubcizfWgEUwPopY3Oqsqq9v12c630KkgOptRMpGNDLcZVbORT+CgT7OB6+wL+pQDccDVNd92pWa1BR8m8c+7j8TkVHdi1riobxO+TANGvC4RugmnXVvEPEK9knKAyMVSXWxUQ63nU3Wx2gFgusyHqzRQ5tQxXfWAD+//5iDgLYnJ5V6TnoTG7zHiRsYOeIv/DJlwDLUO2dRD6zA7qd1spG3u9dptB5NeDz/Xf80Q0yGYvhsWoKEI1KMtC8VuAABaUsBVERw82jO7JsT2tN8jUwr/QEB+IFxtfTmADtWLk/+l8WyyU/5gP/LHpYKlCjsVjcr6R7lk5g5CQFk7w18rm1qiIJ/hq46vIZLf+w8kqVLgiirz921N4FzMt34m+HT00p3ENk5KD1MVjXqNtgV7s3tX6Mxz9jpeebzGCAfFmwRfkgEQuDfwYBkn4ysbim1ITex0Yf0kLSl4D/+8/2PUs6VUvGTU1cy2crVODoQr2Apf/42YYGRXhAA3+3WknROc5f4xeqWp8/O86e60aBQejzDlbBodfLERIrZfzdN3TpsmNIO5lWU3iEBv7XaXw9lzA3QFz1chqytDtX4MmgyjS/MTfCovfiuTj/zcg2fiMGfCHhlZSd1K/AEHURkHX/wHRLoFD3oXpqz5gev2k3im8KHrTcFvjaioXzDFYjui+HxInW32VFs9S/O/qh/7NZSlcCOM90+fPD6dhbP6Q55IfTcf/+Vd5oT/4C2NoWxr30L+X/3WuONJ3u9NDYM2ph7ZlBaFQEeR18Hrtv/kx7k7Esy57hoj9Yak2k3RM2GFsY5Bcmu40I8w21G48BUUYnH0FAdmYM3Luj4MlFNkfzneIvOCzUJWbSETIoQc6Y4760dvBo56NGy5+rQzNf9Nu7VL+A3/Bryn0e5RL1VXFGyyK9RO81gq315lqlFBf8piOpy3h74IudmBLSQWO74buO3Ruve9bO4iOZSMWEuk9eKmPo/AV+81m9B+ifY2jtqMi5OjQWp715ELC2Oz0HbChBlCQLvPHHToZ95kSf/v1qCpe4D5zEwcFzwLU12zEyhrjsQDaKztxR368zpNg1w5akrPgK27G4/NcONxaCWgjmOrOP6FZQxSw7E/9V8tL8nrt1rpDQqeinZr1Lc2Z6nltn2usTMX8VNeQFHOmHP4b2QhQIi7adR4f6UDb/n7CAzIjo7WAplPTQl3+xr6mtwPMQI3ajOf5gkyC1AVKLQh/CQwd9IyHU+0dVcRS8Q6hA+YdEswAAAAA="},{"n":"Neon","u":"https://play.google.com/store/search?c=apps&q=Neon%20Conta%20Digital","img":"data:image/webp;base64,UklGRuYCAABXRUJQVlA4INoCAAAQEwCdASpYAFgAPikUiEMhoSERygQgGAKEsYBoRvkvj0C+3YJdzjrT9nPwA9S+2S8xnm9+KB7gH6Mdcz6AHSv/s9/qv9V7MhLOQZ31oCIiA6wbz6sZZOzT3XoQ+Q6LMWaJpMTa8ZG01dfOIDLLN7ZqUJUwwfxpzCrXGS5aEaQHwfpiQi/umC5AzrEmoczoX1E5UxuJxZg2XwrN2/dnD20iAAD+//5iDaFrSuHKElKV3fDtSIuJ3ozIwDGD9Xq7jTs760mApgJ2AJ3HWa8ebpTayj2ysw0mBgKjqXhzfnbN53FxM1xjytZbzuTtv0fmkb2xBgXyID0RZRATB/9SI1pY8LlvKv5ojAeUfnvKjEjxZVPt/78nc5bcpjqUM5oM7p5HGn4nkcMflC/1mKRPR40A6UmX5+nusXp0MW8ZskxBfxNkJ3jq5+TO5c1OO+OENlTfwG7/miOvOP70nUruEOZNwIPy8J4U8Q5iqJNvxM8ul/vttuRx/9afKfdf4iPAYp25+vLw+/jB4OYC+Xn/n2oAVNWaha4/3GpRyeI3e36PhTCREa/4/zylnW+sGlT/Z5FH6M8p5QxdZmw24v5cbr/ttv4dZohJHx3L+Xr7+zaBABzYMt2MvEZzWjge8CQHvMWwgPCTW/eHDN0lSip2uNcGPrX36JxVULzAeYOIOcsIi/Fqr6bkhdir2+eWQqi36cu916u+a9HH4D4oco/fO0UaGYcxV8sYs8x61U87v7AX+i93RITMUEtQT5Wym+X86OP5bGM3xeeFCBlJqfISTk7joyTN3yBW6bneyHCqNcSivE3vB8ShW0ZIgR5w/dch3OoXcVAWlG/GhjfkOBQG4OE5CkB73NX+ep+LL0phBjc4Q6hkMewK9zkbM7DxMSblIlDqPyHqvpDfMrvUr1aJdfVV6oR2Ma/GW5QjG9QdQsoab2xvAX+PNpOTtRMJbMqKKjABlax/oqy4AAAA"},{"n":"Banco PAN","u":"https://play.google.com/store/apps/details?id=br.com.bancopan.cartoes","img":"data:image/webp;base64,UklGRv4DAABXRUJQVlA4IPIDAABQGQCdASpYAFgAPikUiEMhoSESOzSEGAKEoA0bTbDb+6/jt+N3Xi9BdouSuMx6KfAP4D8u/679DvRv5gHOq8xf6zftVwgH8z/mfWc+gB+mfpb/rz8KP7Rfsx8Bv63f92lDfkZlH/z8Zk7il4RGDgENphMKYdJLCkAwzN5FUvx9rX66d8vkj3eiPRNBal4pEXz5U7nMWssqJ6gK0rCIaS83gUWoJ4IVtgbOHI2vzJ8EVc8dodu5ovtHnk57350WUdFVOjfjMtRyyINEQ3nBAPOwFSAAAP7//mIRVB8johe2XQazt61ytUGw5vQnaj9kmWs6n4BNmghqmmhiTNgTb6P+/b4jC960YYMbRreSoReyb3gtN57CcE0t8nQZ32LxM/99W3XHTp+b2oPTc+YjryFXwJXXWgsjZTBTzc2IBE3cml575NDlziDbZdA0gfKXso+y4byg0+LOv5vAlKKTXmiJhY8lyaFfvRmuzU9n2rStkbwS2WMG6y/tWHFBfO+zb//MVeoCLD1TUQP/T32XMbXTP0Ee5X1j9n+pYSJusE/G5g9kcUsqYw/8m9cG6aU/j6McL7BtYafwU06e4ZzDpqnf4oTQXdnKZYweKPVgwEr4AIiMYQ6O9H2+nZf7xSTfEQAv9SYaW5ivb9bSw0PP1QL7+oGt+dUtdxhgXWwV7BKeAhQb64zxEl3Zif9rvs8eWZ9ggy7AYEWA+Agx9abxSd+siuJ/hTK7m65wCZxsxn+K5WNzb4BBYdjcTiGqB2CUYPTsQ/z1LPVUKNMr87033BHvlG+Dwtea8jyD+yoJqViuVucflhF054MSqBCHv+vrFrPXtvF7F+MLtzC455ba59S/tGz6aYEMVofSsqW3EvJebdtI3NCqL5uO/F6X8tGWJXuj/8wV3qSKTblS1MSmT2Zeecv9d3YjP5WfGptrW6itoGauZf8MmZsiB3gULiE2tabOvuHj0siqGznIww6SR21RISV8gOIxDHxJdasKOEBAtAp/qsj0HgulBplmZvUFfpm2TvUdPcbw07H4JKsGRI+2SMMxJwza5GYkE/Zwe2ArWVotACqZyYvMqb+6E7clA5dJMZFiM2uoOQKV1x7aEnIYUo+CjJxVQVNsiBE90adX3ZH/CqTrsPpDs7D84JIczPqneHViFx0cxpnyqBsr/O8aeNTfrIB0Pmbc5sh2FIuZQqgBZ5318xiy48L++fnmPDnfjrOlxYLgUh8UZOr5dkf/2dANSS078fzRFFy9LF71rytixxAgQ7c/04UWsiKs+K5ot0HvuO3FxSIxUJcjpKTjcTVJMaaGhrb0iwBO6JYAMswcWuy9Lz71KzVS/4OvNIAAAA=="},{"n":"iti (Itaú)","u":"https://play.google.com/store/apps/details?id=com.itau","img":"data:image/webp;base64,UklGRqoEAABXRUJQVlA4IJ4EAADwGgCdASpYAFgAPikQh0KhoQnMgxIMAUJaADNvgFenkD90/FX9wP9h1dG4vdH9rsuA5P/tf5cf3L2VfZl5gH6Vf2v8qv6r3HvMB+rH+n/zPtD/rN7yfQA/l39660v0AP1k9MD9svhD/ZX/rf872aqB3yBn43cocyG8zZJcPPXPaEWEtYWOd1KvDfP+5sP3mFLp3LooczbYzTvbn64R8+oWEjyWATZjhOdLzxDXybNU9AdCiScQ7/utmG9R3tXLn19rzWKlykhqOxrpJafgSsTPcol1kXCQ8Rvqnl55ajcwAAD+//5iNYpzAWoHqIZC8Kfcil+NAL5yAFmUuic6YjPv/iwyEekPBlqgO+fRmNqzcTDtjr+O+izuGzl47F5xcNRDrj54bTimWgL2aZV+mdS6v5/SsLzJfIUIn52Jdd/Bp6vkiIhIT2gZ/t+uZQ1cZOTzDmhF3e1m9nd8eZQuOtlBGTKc6Gxv7qJK5FXrypSUZp5Rf1/ovx1wUUMo59rY98C0S7+JTgeInWp7hhOFDlsHi+Hk12DgHIf/+eE/bZhqlu9St9U47/37HNfMQTXLkojva/RprsBs34Rwqg5TRzMhJfjXRLWnn5KBKymfiWgLNLrOLLiDgii+BVNutAT7TYoU7bt7Gh3Cz00GS3CQIibIM3pUUuGmsEZ78Xd14f8XESv5v/KrEcOVv47/hICZ3m/3wCAjV5jqKXx9+nP/kmWMPajYK7X7XPRsOSjmQNA6Mqq/D43GaTJBrbIjyChOD7OVeO2gxOvHLNP7V87jXxPdWwhVMPsH103pRUfrM6FHSqI/6NS67VONb60loE/z0nWITAIB6qr9Lii5OXg8P0+v9Wgx2aR7T98EcF5g5vXUmCflGvgwNKvBb3QI2vEn4evVkzTrRUo+KRa/mb/R261m115C1jyTKLhUfoahQJvvKyK40anNukRcB0cH/hFrBkHUPssjU+YxFmPpWHan+HXt1zBCz3+gCl1BW8EzUBfJBWUJbK5gBiz52oGZ8me6/28y/60SyiXSq23h/w4v5hDHHNyYilSwpFPnwa/y4omgQwA1a04asu+QBUGs8zXyHrzs8krf74iCdO2O/P4EaBtSr4kGK4/9yciNbLST15qU24b4kKoOzvEADq6NzwXm2M8nxow6sDCK7X5mnE7jxDpuFKfx2+ao+gBFQbl+q7akPVzyfgnEBlPaus1uqL7LiHR8Lk5NFDkpUTkIxvFUeky63vk+FdwahwQa1kZDAv57KjeXRAy9mQnAMK8LqOxB9rtPvKHPUIU13dVzTsqE+lYxvmyZ9tEIW43HuJ/RI2xN4zhiuvEnaVTG0rP8GkJsvf/RrU3vLmIFGpO84cWVVWgOeTxRraWGUiEYxVpedP2VkUKpYj2lt8Aygeh9ML9D2fdwgoXJu4I60k8X82j431ny47YOJPoyEKnNp0RkcbTGiwdnHpS4tLJaF3MiHaXJxDloKPouEdkWzMlVQvDw22H8ykhivbXfS2/pHUKU3p+/1mABybMWhvzzjx+1ExaW2Z+ZMIi0rDJpJXbugNrxo4CwjUuHvY2VYbNLBRAAAAA="},{"n":"Agibank","u":"https://play.google.com/store/search?c=apps&q=Agibank","img":"data:image/webp;base64,UklGRnACAABXRUJQVlA4IGQCAAAQEACdASpYAFgAPikUiEMhoSERygQgGAKEsoBoJONbYnztvJzwHPAdbH6AH6gdbP5NlHAxaIHlwBvO+ui0L4hs4eu1vMBrl6WwzHnr5NRlLmyaW8IDjgKBP1vg6k6macXlhKGXdaE2ZT2yn7ojG26wsXsNpGiTKPR9YkWqyndEA/gXk1zRp5BgAAD+//5iEQCWr2Ugdl/4wUq3cTLyFQLG0/JO/PTq0SAfhrEy96Ra0QA0R3qAgjAjtG/vVlYEw0dM2C1K21kaVGV/+P1us7rodXUIApGf3bLmzIYHNQcFI0aUDN99Nbr6TeM0qyG/PV/8QHO7lQ+dgXgNcZOAPn1+A4WUer6tSBD/6e/99U4CDRaGFSTbmQHMKw7dZ/kvZEqz+/OLgNG4kTWAdPuZS1PqpdfMaa95SNi6706EZXEBxt0uj+KVfbUUVvlgvDSmUtkyC9aSXH6+yNv13W7cq//1p7CP6aGb31aO3xn/+q//Enm52KsFPw0s4f5bP90GTo7yuLzUqc236ZCvMEQyCqvgsQUHnvb/83b9OQ/61b71/tFjuIj7PgIfQZkBGRQgzYA8Wuvjt95JPPS+7QtOP3yaoi+1u8N855a3uo/ze+Wus8WciWOhUtURG1Q/07NgRpJS/VWjk2TGmiKRfmUPtefUenm5LTzErzbOzKb01m2svFhVnRzLSzNUXHRlDvqGQao9cFYPc8QHVrwde2Ek5BHmzM6D1QEzUYvViW6zqOFMypmqpW7z+Hj5ZD19F4WOSgy5TjeJVJEBHBzmIArGUWzXX2sFlQL5wUPtgrbRZRtaOyiAAAA="},{"n":"Sofisa Direto","u":"https://play.google.com/store/search?c=apps&q=Sofisa%20Direto","img":"data:image/webp;base64,UklGRqgCAABXRUJQVlA4IJwCAABQEQCdASpYAFgAPikUiUMhoSERzfwgGAKEs4BoC6ItpnKUaa+fUbtqPMB5uenL8+X+yvw8+UcA4uAN8Xw6zdXOPRPyQgV/GPy1u8fakfjdATsxUQPQeN6pSKX81RWo+/CoxgffkDOzAmaSrcp9ahud7l0ROVK8+aRgeKcVUxSWVXsbZNjV1p7EB+sxS881/PcfQ+AA/v/+JpCA6fFA5hoTwCDH79bfQSTaeYi/5vsG2JtSi8hKlfNcv00RCC0WnhM6n2J+lYP6O1JcYmClnz+3Cb52l/lHgvJT07NcAtK2q5rwE7h0CGkj+LGFjceT/EfAu4oPfhBXymqc5eiGI9lpgTOseHA6Xnfxch5jLeyKDp/jE+XaT1k3/nJ1//vBb/fVdUWuZ9Nsgh3mlCRFoCvddRIC8as01G/mmQL98Q/3/I2+UYUk0eecAjLCXrlVeD/yLw/7W+luNlXKHi9cjUY9394byEO/+nwXdmTTWPfv/j3Xjhez59+/cwGwRUfwu/lPPugUZ2p/DIbaffZfL3QP2ot5zUvfKHqv5pxr9sio5X1esnK5R86Vo6BRUNjZBjMLwIHDqhi0/6Lf8g2/pjzX1fl+H+mfTV8Wo/Und/wbmtXIKu2kl3+tCcD4BO7C977BQSGF96/2YOpJCR4TphUp/SN9QdGyE2IcgaHwqlacdCSJkEd46Hv68lNbIRhMZq+l7rTrfUNQtkjWY85Bwa697G3S5nkA9dRr1nheXRZK9IVEj+b6sy1QHC7TOoqgmk0UyJsKp+bUDODdjeSGRsPgV5LVGqkTEma/awlqOLhpyj3vs4QpEBEhtnD4CiFLbFZtJhqlDXC+pLPANZ39XQl+QLgS8jFnao05IDgdxMLQz0AP84cDJ7rT4AAAAA=="},{"n":"BTG Pactual Digital","u":"https://play.google.com/store/search?c=apps&q=BTG%20Pactual","img":"data:image/webp;base64,UklGRgYEAABXRUJQVlA4IPoDAABwFgCdASpYAFgAPikUiEMhoSETK2xIGAKEs4BnV6PdgnTTe/qg24vmY/aL9buCO6in0AP1A61KZMPdfyAyo/3P8ns99+R+S4/yE4v440YIQdLsY7MD38qIDlLyO7LTAMMH3QB4usbZ8FV5sSFylzIqsbdi3AIJIxhMk1T5XfQJA5bg950t/YJbSQwEB/1GccdAJ2lyeIPou3n6JoLmdcwt4UVtdekE/VukgS66qCOAlLXRzdcQ+WqlgCyZAAD+//5iDaFrZQOu7G33rP7IDJM/wq6qPGOhyoqH3hPa8HGwtMb0xQ1owKfGxscdtdYLMDw5HtNlIs7RBMyzBlYIbVTyrjvUZZ9cb+z+n8aSizzpZykdtfBk0COAuhmMcC74MO7lOZh3rWER5kr4QL4oq2qppIP6UlNuwED+5eYMB9R5xPktqR62MauX/507A27ZMm9/oY8vnR3tltmIY/PLaIPXLfUfmgu/Heeul9wj/vId0L9eGvxvZbKb7F0+MhIBS9W9ZYH3rdjiNipI2+teKlpebYuDdLLMixxgnVGS3dPONP8/50pm5BGk/ktYvxmn6YNBhKOPt+PZu3q8dybPlV5LgLuEOoJ7hUbI+1BDvJlD/XX46L9Ubq/fj0SYVrxgJp8yRK6unhpIBVAjxbiTGRsTPkv7+eV2nJZ4jelvN+R/0q+6h6kvBl+a9nR/qtm0i5EHsE2T7IXo53mXfijXZp69PBXh55xtQTTODU0FJEH/LxhEpJtgkdku7Db+VHPzPVDA3OVS22VJ9iGkhl0G/PP/vW1LI6iNX5j4bS+64v//0oEtnxt8Le+nf/45kNX4HJvP53uLK8W9wylp4z9DqfXDSaGjbVeFqibL+6yLsnk64QeKkyb6fjBnYEr3j8j1bPTo/NenApmGE3d7H8DOyHB6HNMMjJ29BcdzbeXfAclzRcKShWaibAyYdMeaYgPBi/oBp5BW7d9PZo8K0TpnVn1z3hnGpAaMrFXO7vmR9wkUMyZaPB8r2CZc2k5V/Lz7oAQmpLi9KhUAiPk9EQqg7zN0GPMimUIX939EL8XE+wrdUffqwzVosfC1f8bmWkURjYuMQ51fj/r5pF+JNXeYgs77jkBZyHqbhipR6Q1ZgIYM4mIMNjeT04J/rcxBLLSy9VOosyG3hgR0veZ4Bm3fwATvDq5MHpMAzlDfl1VMnjH2Z0y/5zgNU/RPH4YauFlnkvnyt9cr8HTLcPwqZVEDBNc++PjIwIA+ITTuMjTdz9T3kjWHsheZ+Up4/ELm7TptB2WM0KxzNRj4DEj/Hll7YvpwBW+rOtziZz/vEvKoYIXKDZ6ESMp0T24HVbs0iPtqxlp2H2tV/ixx8AAA"},{"n":"Banco Original","u":"https://play.google.com/store/search?c=apps&q=Banco%20Original","img":"data:image/webp;base64,UklGRm4CAABXRUJQVlA4IGICAADQEACdASpYAFgAPikUiUMhoSERxCAYAoSygGh+M6mSeDpLbZHneNMr9ADpcP2q9IqjsgW31ngikO8XJyOrXf/vVCtt3i+GchuoPnOo1WBbhTKQBbIV1Em4ZsA6SXoyKRV6gOvkABlEPfM6mJPMYAttv0+vGxNChk/TgwbJ2nSdw9LKnI1gaRnbFcPyczY7gAD+//4mkEcV2mZa5VL7WH0TOLOS0OFT1IqVxfdV2t6BhffR0sGEZGi/ERQ5EbRRFN2+rPKQIWzKG0VgyJV72OUB0dL63yETbAaCoNhWixz/E5DuHW+JDnnCpj6/fAKDqfTyvpIfYuGWpwilf1KH/8ofxpOjxTLNtJ9t2QHwf9TFkH7oHNae7OVe6EKjO6Yt5i5D+B3Xl8L2p5G/SfOi2fzh88TEZD4c98ulKonb/wv4uVo/ydAvXm//s3/M7/r0uDJdDM/+O/NRP9LmZc1N7T//k7pLmWIKnJSODQTeC0NpqaB0d4tkYK2tPWtql+mAJb8ZHX/PzNSrOOfwjq/c6B1LPECxOBXgF8zLenSLBxLy59jya4iivCj6KnSX+fNKJvKoIMlz6IPfAn5hh6V8BcuGgzXvj6GKOd+1/77yza4r23lPRfziwP0l2y1339xlRlVXN/vnn/n+iATxnb8NBO2KZXwnZqjZwOtaL9T5+xXH4iv379ZRRY3KBCakNqbw4bLohVmurlF2WYES/EXU6Se2Z72YpH8YIQGQh21/xsjh4NQugHAZ/MFlCrQwhUl2DZoHmFPKyK2vlzxAXXQZl6RAZWVb+zd9X9WbMTYkQeuQAAAA"}];
 
@@ -1820,9 +1931,9 @@ window.pagamentoEfetuado = function(){
   function tlv(id, v){ v = String(v); return id + ("00" + v.length).slice(-2) + v; }
   function pixCopiaECola(valor){
     var base = tlv("00", "01") + tlv("01", "12") +
-      tlv("26", tlv("00", "br.gov.bcb.pix") + tlv("01", PIX_CHAVE)) +
+      tlv("26", tlv("00", "br.gov.bcb.pix") + tlv("01", pixChaveFmt())) +
       tlv("52", "0000") + tlv("53", "986") + tlv("54", valor.toFixed(2)) +
-      tlv("58", "BR") + tlv("59", PIX_NOME) + tlv("60", PIX_CIDADE) +
+      tlv("58", "BR") + tlv("59", pixNome()) + tlv("60", pixCidade()) +
       tlv("62", tlv("05", "***")) + "6304";
     return base + crc16(base);
   }
@@ -1842,7 +1953,7 @@ window.pagamentoEfetuado = function(){
     var ban = document.querySelector('input[name="banco"]:checked');
     return {
       nome: $("pNome").value.replace(/\s+/g, " ").trim(),
-      zap: "11926190514",
+      zap: window.lojaSoNumeros(LJ().whatsapp),
       ent: ent ? ent.value : "",
       rua: $("pRua").value.replace(/\s+/g, " ").trim(),
       banco: ban ? Number(ban.value) : -1
@@ -1868,7 +1979,7 @@ window.pagamentoEfetuado = function(){
   }
   function textoDe(f, rs, forma){
     var entTxt = f.ent === "domicilio" ? ("Entrega a domicílio: " + f.rua) : "Sem entrega a domicílio";
-    var linhas = ["*Pedido — Adega dos Brutos*", "*Nº do pedido:* " + codigoPedido, "", "*Cliente:* " + f.nome, "*WhatsApp:* " + telFmt(zapDe(f)),
+    var linhas = ["*Pedido — " + LJ().nome + "*", "*Nº do pedido:* " + codigoPedido, "", "*Cliente:* " + f.nome, "*WhatsApp:* " + telFmt(zapDe(f)),
       "*Entrega:* " + entTxt + " (" + fmt(rs.taxa) + ")", "", "*Itens:*"];
     rs.itens.forEach(function(x){
       linhas.push("• " + x.l.qtd + "x " + x.l.item.nome + (x.t === null ? " (preço a confirmar)" : " — " + fmt(x.t)));
@@ -1877,7 +1988,7 @@ window.pagamentoEfetuado = function(){
     if (rs.semPreco) linhas.push("Obs.: " + (rs.semPreco === 1 ? "1 item está sem preço" : rs.semPreco + " itens estão sem preço") + " e não entra no total.");
     var banco = BANCOS[f.banco];
     linhas.push("", "*Banco:* " + banco.n, "*App do banco (Google Play):* " + banco.u);
-    linhas.push("", "*Pagar para:* " + PIX_TITULAR + " (" + PIX_BANCO + ")", "*Chave Pix (celular):* +55 11 92619-0514");    return linhas.join("\n");
+    linhas.push("", "*Pagar para:* " + pixQuem(), "*Chave Pix (" + pixTipoTxt() + "):* " + pixChaveMostra());    return linhas.join("\n");
   }
   function renderPedido(){
     var f = lerPedido();
@@ -1904,7 +2015,7 @@ window.pagamentoEfetuado = function(){
       : "";
     var temValor = rs.itens.length > 0 && rs.total > 0;
     $("pixNote").textContent = temValor ? "" : "Sem valor ainda: o código aparece quando os itens tiverem preço.";
-    $("pixTitular").textContent = "Pague para: " + PIX_TITULAR + " (" + PIX_BANCO + ")";
+    $("pixTitular").textContent = "Pague para: " + pixQuem();
     var erro = erroDe(f, rs, "pix");
     var btn = $("enviarBtn");
     btn.setAttribute("aria-disabled", erro ? "true" : "false");
@@ -3267,6 +3378,62 @@ window.pagamentoEfetuado = function(){
       $("pdSenha").value = s1; $("pdGate").requestSubmit();
       $("pdConfig1").hidden = true;
     }, function(e){ m(e && e.message ? e.message : "Não deu certo. Tente de novo.", true); }).then(function(){ cfg.disabled = false; });
+  });
+  // dados da loja
+  var ljCampos = { nome: "ljNome", whatsapp: "ljZap", dono: "ljDono", email: "ljEmail", pixTipo: "ljPixTipo", pixChave: "ljPixChave", pixTitular: "ljPixTitular", pixBanco: "ljPixBanco", pixCidade: "ljPixCidade" };
+  function ljSo(v){ return String(v || "").replace(/\D/g, ""); }
+  function ljZapLimpo(v){ var d = ljSo(v); if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2); return d; }
+  function ljLinksGmail(){
+    var e = ($("ljEmail") && $("ljEmail").value.trim()) || (window.LOJA && window.LOJA.email) || "";
+    var q = /@/.test(e) ? "?authuser=" + encodeURIComponent(e) : "";
+    if ($("ljGmailSenha")) $("ljGmailSenha").href = "https://myaccount.google.com/signinoptions/password" + q;
+    if ($("ljGmailFone")) $("ljGmailFone").href = "https://myaccount.google.com/phone" + q;
+  }
+  function ljIgual(){
+    var ig = $("ljPixIgual") && $("ljPixIgual").checked;
+    if (!$("ljPixTipo")) return;
+    $("ljPixTipo").disabled = ig; $("ljPixChave").disabled = ig;
+    if (ig) { $("ljPixTipo").value = "celular"; $("ljPixChave").value = $("ljZap").value; }
+  }
+  function ljPreencher(){
+    if (!$("ljNome") || !window.LOJA) return;
+    var L = window.LOJA;
+    Object.keys(ljCampos).forEach(function(k){
+      var el = $(ljCampos[k]); if (!el || document.activeElement === el) return;
+      el.value = (k === "whatsapp" || (k === "pixChave" && L.pixTipo === "celular")) ? window.lojaZapFmt(L[k]).replace(/^\+55 /, "") : (L[k] || "");
+    });
+    $("ljPixIgual").checked = L.pixTipo === "celular" && ljZapLimpo(L.pixChave) === ljZapLimpo(L.whatsapp);
+    ljIgual(); ljLinksGmail();
+  }
+  window.addEventListener("adega-loja", ljPreencher);
+  document.querySelectorAll('.pd-aba[data-aba="configurar"]').forEach(function(b){ b.addEventListener("click", ljPreencher); });
+  if ($("ljPixIgual")) {
+    $("ljPixIgual").addEventListener("change", ljIgual);
+    $("ljZap").addEventListener("input", function(){ if ($("ljPixIgual").checked) $("ljPixChave").value = $("ljZap").value; });
+    $("ljEmail").addEventListener("input", ljLinksGmail);
+    ljPreencher();
+  }
+  var ljb = $("ljSalvar");
+  if (ljb) ljb.addEventListener("click", function(){
+    var m = function(t, erro){ $("ljMsg").textContent = t; $("ljMsg").classList.toggle("erro", !!erro); };
+    ljIgual();
+    var o = {};
+    Object.keys(ljCampos).forEach(function(k){ o[k] = $(ljCampos[k]).value.replace(/\s+/g, " ").trim(); });
+    o.whatsapp = ljZapLimpo(o.whatsapp);
+    if (!o.nome) { m("Escreva o nome da adega.", true); return; }
+    if (o.whatsapp.length !== 10 && o.whatsapp.length !== 11) { m("WhatsApp com DDD, só números. Ex.: (11) 99999-9999.", true); return; }
+    if (o.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(o.email)) { m("O e-mail parece errado. Confira.", true); return; }
+    if (o.pixTipo === "celular") { o.pixChave = ljZapLimpo(o.pixChave); if (o.pixChave.length !== 10 && o.pixChave.length !== 11) { m("A chave Pix de celular precisa ter DDD e número.", true); return; } }
+    else if (o.pixTipo === "cpf") { o.pixChave = ljSo(o.pixChave); if (o.pixChave.length !== 11 && o.pixChave.length !== 14) { m("CPF tem 11 números e CNPJ tem 14.", true); return; } }
+    else if (o.pixTipo === "email") { if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(o.pixChave)) { m("A chave Pix de e-mail parece errada.", true); return; } }
+    else { o.pixChave = o.pixChave.replace(/\s/g, ""); if (o.pixChave.length < 32) { m("A chave aleatória tem 32 letras e números (com tracinhos, 36).", true); return; } }
+    if (!o.pixTitular) { m("Escreva o nome de quem recebe o Pix.", true); return; }
+    if (!o.pixCidade) { m("Escreva a cidade de quem recebe o Pix.", true); return; }
+    o.atualizado = new Date().toISOString();
+    ljb.disabled = true; m("Salvando…");
+    window.ghSalvarLoja(o).then(function(){ m("Salvo ✓ Em cerca de 1 minuto o site todo mostra os dados novos."); },
+      function(e){ m(e && e.message === "Entre no painel primeiro." ? e.message : "Não consegui salvar. Confira a internet e tente de novo.", true); })
+      .then(function(){ ljb.disabled = false; });
   });
   // troca de senha
   var nb = $("pdNovaBtn");
