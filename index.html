@@ -49,6 +49,24 @@ html body .empty-state,html body .empty-state *{text-shadow:0 2px 4px #000,0 0 1
 html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shadow(0 0 14px rgba(0,0,0,.7))}
 @media (prefers-reduced-motion:reduce){html body #fundoVivo::before{animation:none}}
 
+/* ---- QR Code da adega ---- */
+.qr-cartao{max-width:1120px;margin:14px auto 0;padding:0 16px}
+.cm-cartoes .qr-cartao{margin:0;padding:0;max-width:none}
+.qr-cartao button{width:100%;display:flex;align-items:center;gap:16px;text-align:left;cursor:pointer;background:linear-gradient(120deg,rgba(255,255,255,.10),rgba(20,11,5,.82));border:1px solid rgba(242,184,58,.45);border-radius:18px;padding:14px 18px;color:#fff;font-family:inherit}
+.qr-cartao .qc-ic{flex:none;width:58px;height:58px;border-radius:14px;background:#fff;display:grid;place-items:center}
+.qr-cartao .qc-ic svg{width:40px;height:40px}
+.qr-cartao strong{display:block;font-size:18px;color:#ffd77a}.qr-cartao small{display:block;font-size:14px;opacity:.85;margin-top:2px}
+.qr-cartao .qc-seta{margin-left:auto;font-size:24px;color:#f2b83a}
+.qr-jan{position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.88);display:grid;place-items:center;padding:16px;overflow-y:auto}
+.qr-jan[hidden]{display:none}
+.qr-caixa{width:min(420px,100%);display:grid;gap:12px;text-align:center;color:#fff}
+.qr-caixa img{width:100%;height:auto;border-radius:16px;box-shadow:0 0 30px rgba(242,184,58,.35);background:#140b05}
+.qr-caixa p{margin:0;font-size:14px;opacity:.85}
+.qr-botoes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qr-botoes a,.qr-botoes button{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;padding:12px 10px;font:800 15px/1.1 inherit;font-family:inherit;text-decoration:none;cursor:pointer;border:0}
+.qr-botoes .qr-pdf{background:#f2b83a;color:#1a0f05}
+.qr-botoes .qr-img{background:#fff;color:#1a0f05}
+.qr-botoes .qr-fechar{grid-column:1/-1;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)}
 /* ---- vídeos da adega e grupo do WhatsApp ---- */
 .vid-cartao{max-width:1120px;margin:22px auto 0;padding:0 16px}
 .vid-cartao button{width:100%;display:flex;align-items:center;gap:16px;text-align:left;cursor:pointer;background:linear-gradient(120deg,rgba(242,184,58,.22),rgba(20,11,5,.82));border:1px solid rgba(242,184,58,.6);border-radius:18px;padding:14px 16px;color:#f3ead8;font:inherit}
@@ -1543,12 +1561,39 @@ window.pagamentoEfetuado = function(){
     <div class="vid-cartao" id="vidCartao" hidden>
       <button type="button" id="vidAbrir" aria-haspopup="dialog"><span class="vc-play" aria-hidden="true">▶</span><span><strong>Vídeos da adega</strong><small id="vidResumo">Assista e compartilhe</small></span><span class="vc-seta" aria-hidden="true">→</span></button>
     </div>
+    <div class="qr-cartao">
+      <button type="button" id="qrAbrir" aria-haspopup="dialog"><span class="qc-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#1a0f05" d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm4 0h2v4h-4v-2h2zm0-4h4v2h-4zm2 2h2v2h-2z"/></svg></span><span><strong>QR Code da adega</strong><small>Mostre para um amigo ou baixe em PDF</small></span><span class="qc-seta" aria-hidden="true">→</span></button>
+    </div>
     <p class="cm-titulo-esc">Converse com a adega<span data-loja-se="grupo" hidden>: escolha o que preferir</span></p>
     <div class="cm-escolha">
       <button type="button" class="cm-cartao" id="chatAbrir" aria-haspopup="dialog"><span class="ic" aria-hidden="true">💬</span><span><strong>Bate-papo da adega</strong><small>Converse aqui no site com a adega e os outros clientes</small></span><span class="seta" aria-hidden="true">→</span></button>
       <a class="cm-cartao zap" id="grupoCartao" data-loja-href="grupo" data-loja-se="grupo" target="_blank" rel="noopener" hidden><span class="ic" aria-hidden="true">👥</span><span><strong>Grupo do WhatsApp</strong><small>Promoções e novidades no seu WhatsApp</small></span><span class="seta" aria-hidden="true">→</span></a>
     </div>
   </section>
+  <div id="qrJanela" class="qr-jan" role="dialog" aria-modal="true" aria-label="QR Code da adega" hidden>
+    <div class="qr-caixa">
+      <img src="qr/qr-adega.jpg" alt="QR Code do site da Adega dos Brutos" width="1000" height="1250" loading="lazy">
+      <p>Aponte a câmera do celular para abrir o site da adega.</p>
+      <div class="qr-botoes">
+        <a class="qr-pdf" href="qr/qr-adega.pdf" download="QR Code - Adega dos Brutos.pdf">⬇ Baixar PDF</a>
+        <a class="qr-img" href="qr/qr-adega.jpg" download="QR Code - Adega dos Brutos.jpg">⬇ Baixar imagem</a>
+        <button type="button" class="qr-fechar" id="qrFechar">Fechar</button>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var j = document.getElementById("qrJanela"), ab = document.getElementById("qrAbrir");
+    if (!j || !ab) return;
+    function abrir(){ j.hidden = false; document.body.style.overflow = "hidden"; document.getElementById("qrFechar").focus(); }
+    function fechar(){ j.hidden = true; document.body.style.overflow = ""; ab.focus(); }
+    ab.addEventListener("click", abrir);
+    document.getElementById("qrFechar").addEventListener("click", fechar);
+    j.addEventListener("click", function(e){ if (e.target === j) fechar(); });
+    document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !j.hidden) fechar(); });
+    if (location.hash === "#qr") abrir();
+  })();
+  </script>
   <div id="vidPagina" class="vid-pag" role="dialog" aria-modal="true" aria-label="Vídeos da adega" hidden>
     <div class="vid-topo"><button type="button" id="vidFechar">← Voltar</button><strong>Vídeos da adega</strong><button type="button" id="vidSom">🔇 Sem som</button></div>
     <div id="vidFeed" class="vid-feed"></div>
