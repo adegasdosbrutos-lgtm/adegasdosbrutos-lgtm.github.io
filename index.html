@@ -76,7 +76,7 @@ html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shado
 .pd-vid img{width:100%;aspect-ratio:9/16;object-fit:cover;background:#111}
 .pd-vid span{font-size:13px;padding:6px 8px;min-height:2.6em}
 .pd-vid .pd-btn{margin:0 8px 8px;padding:8px}
-</style></head><body>
+</style><link rel="stylesheet" href="comunidade.css"></head><body>
 <div id="fundoVivo" aria-hidden="true"></div>
 <script>
 // ===== Dados da loja: nome, WhatsApp e Pix =====
@@ -1274,6 +1274,7 @@ window.pagamentoEfetuado = function(){
       <button class="pd-aba" data-aba="fechamento" type="button">📈 Fechamento</button>
       <button class="pd-aba" data-aba="exportar" type="button">⬇ Exportar</button>
       <button class="pd-aba" data-aba="videos" type="button">🎬 Vídeos</button>
+      <button class="pd-aba" data-aba="clientes" type="button">👥 Clientes</button>
       <button class="pd-aba" data-aba="configurar" type="button">⚙ Configurar</button>
       <button class="pd-aba guia-abrir" type="button">🎧 Guia em áudio</button>
     </div>
@@ -1414,6 +1415,11 @@ window.pagamentoEfetuado = function(){
           <div id="pdVidLista" class="pd-vid-lista"></div>
         </div>
       </div>
+      <div class="pd-sec" data-sec="clientes" hidden>
+        <h2>Clientes <span>// vídeos e bate-papo</span></h2>
+        <p class="exp">Quem quer ver os vídeos ou entrar no bate-papo entra com a conta Google, escreve nome e WhatsApp e pede para entrar. O pedido aparece aqui. Aprove quem você conhece e recuse o resto. Dá para bloquear depois.</p>
+        <div id="pdCliCorpo"></div>
+      </div>
       <div class="pd-sec" data-sec="configurar" hidden>
         <h2>Configurar <span>// loja, senha e contas</span></h2>
         <div class="pd-caixa" style="display:grid;gap:12px;max-width:760px">
@@ -1532,8 +1538,15 @@ window.pagamentoEfetuado = function(){
   </div>
 </section>
 
-  <section class="vid-cartao" id="vidCartao" hidden>
-    <button type="button" id="vidAbrir" aria-haspopup="dialog"><span class="vc-play" aria-hidden="true">▶</span><span><strong>Vídeos da adega</strong><small id="vidResumo">Assista e compartilhe</small></span><span class="vc-seta" aria-hidden="true">→</span></button>
+  <section class="cm-cartoes" id="cmCartoes">
+    <div class="vid-cartao" id="vidCartao" hidden>
+      <button type="button" id="vidAbrir" aria-haspopup="dialog"><span class="vc-play" aria-hidden="true">▶</span><span><strong>Vídeos da adega</strong><small id="vidResumo">Assista e compartilhe</small></span><span class="vc-seta" aria-hidden="true">→</span></button>
+    </div>
+    <p class="cm-titulo-esc">Converse com a adega<span data-loja-se="grupo" hidden>: escolha o que preferir</span></p>
+    <div class="cm-escolha">
+      <button type="button" class="cm-cartao" id="chatAbrir" aria-haspopup="dialog"><span class="ic" aria-hidden="true">💬</span><span><strong>Bate-papo da adega</strong><small>Converse aqui no site com a adega e os outros clientes</small></span><span class="seta" aria-hidden="true">→</span></button>
+      <a class="cm-cartao zap" id="grupoCartao" data-loja-href="grupo" data-loja-se="grupo" target="_blank" rel="noopener" hidden><span class="ic" aria-hidden="true">👥</span><span><strong>Grupo do WhatsApp</strong><small>Promoções e novidades no seu WhatsApp</small></span><span class="seta" aria-hidden="true">→</span></a>
+    </div>
   </section>
   <div id="vidPagina" class="vid-pag" role="dialog" aria-modal="true" aria-label="Vídeos da adega" hidden>
     <div class="vid-topo"><button type="button" id="vidFechar">← Voltar</button><strong>Vídeos da adega</strong><button type="button" id="vidSom">🔇 Sem som</button></div>
@@ -1575,6 +1588,7 @@ window.pagamentoEfetuado = function(){
   }
   function montar(){
     var feed = $("vidFeed"); feed.textContent = ""; montado = true;
+    if (window.adegaSocialParar) window.adegaSocialParar();
     if (obs) obs.disconnect();
     obs = new IntersectionObserver(function(es){
       es.forEach(function(e){
@@ -1594,6 +1608,7 @@ window.pagamentoEfetuado = function(){
       var b = document.createElement("button"); b.type = "button"; b.textContent = "Compartilhar";
       b.addEventListener("click", function(ev){ ev.stopPropagation(); compartilhar(v); });
       info.appendChild(p); info.appendChild(b);
+      if (window.adegaSocialVideo) window.adegaSocialVideo(info, v);
       it.appendChild(vd); it.appendChild(pz); it.appendChild(info);
       it.addEventListener("click", function(){ if (vd.paused) { vd.play().catch(function(){}); it.classList.remove("pausado"); } else { vd.pause(); it.classList.add("pausado"); } });
       feed.appendChild(it); obs.observe(it);
@@ -1608,9 +1623,12 @@ window.pagamentoEfetuado = function(){
   function fechar(){
     $("vidPagina").hidden = true; document.documentElement.style.overflow = "";
     document.querySelectorAll("#vidFeed video").forEach(function(v){ v.pause(); });
+    if (window.adegaSocialParar) window.adegaSocialParar();
     if (location.hash === "#videos") history.replaceState(null, "", location.pathname + location.search);
   }
-  $("vidAbrir").addEventListener("click", abrir);
+  // só entra quem a adega liberou (tela "Peça para entrar", em comunidade.js)
+  function pedirEAbrir(){ (window.adegaExigirAcesso ? window.adegaExigirAcesso("videos") : Promise.reject()).then(abrir, function(){ if (location.hash === "#videos") history.replaceState(null, "", location.pathname + location.search); }); }
+  $("vidAbrir").addEventListener("click", pedirEAbrir);
   $("vidFechar").addEventListener("click", fechar);
   $("vidSom").addEventListener("click", function(){
     som = !som; this.textContent = som ? "🔊 Com som" : "🔇 Sem som";
@@ -1618,7 +1636,7 @@ window.pagamentoEfetuado = function(){
   });
   document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !$("vidPagina").hidden) fechar(); });
   window.adegaVideosRecarregar = function(){ carregar(); };
-  carregar().then(function(){ if (location.hash === "#videos" && lista.length) abrir(); });
+  carregar().then(function(){ if (location.hash === "#videos" && lista.length) setTimeout(pedirEAbrir, 300); });
 })();
 </script>
   <dialog id="vendaResp" aria-labelledby="vrTitulo">
@@ -1626,7 +1644,8 @@ window.pagamentoEfetuado = function(){
     <ul>
       <li><b>Bebida alcoólica só para maiores de 18 anos.</b> Na entrega pedimos documento oficial com foto. Sem documento, a bebida alcoólica não é entregue (Estatuto da Criança e do Adolescente, Lei nº 8.069/1990).</li>
       <li><b>Não vendemos cigarro, charuto, vape nem outros produtos de tabaco pelo site.</b> Esses itens são vendidos só no balcão da loja, para maiores de 18 anos, como manda a Lei nº 9.294/1996.</li>
-      <li><b>Seus dados:</b> o site não guarda seu nome, telefone nem endereço. O pedido vai direto para o nosso WhatsApp, e usamos esses dados só para entregar e falar com você sobre o pedido.</li>
+      <li><b>Seus dados:</b> nos pedidos, o site não guarda seu nome, telefone nem endereço. O pedido vai direto para o nosso WhatsApp, e usamos esses dados só para entregar e falar com você sobre o pedido.</li>
+      <li><b>Vídeos e bate-papo:</b> para entrar, você usa sua conta Google e escreve nome e WhatsApp. Guardamos nome, WhatsApp, e-mail e foto da conta Google só para a adega liberar seu acesso e mostrar seu nome nas mensagens. Isso fica no Firebase, serviço do Google. Suas mensagens, fotos e comentários aparecem para os outros clientes liberados. Para apagar seus dados, abra o bate-papo, toque em <b>Conta</b> e em <b>Apagar meus dados</b>, ou peça para a adega.</li>
       <li>Dúvidas: WhatsApp <span data-loja="whatsapp">+55 11 99123-9748</span>.</li>
     </ul>
     <form method="dialog"><button class="ok">Entendi</button></form>
@@ -3142,6 +3161,7 @@ window.pagamentoEfetuado = function(){
       liberado = true; msg("pdGateMsg", "");
       $("pdGate").hidden = true; $("pdApp").hidden = false;
       irPara("mapa");
+      if (window.adegaClientesContar) window.adegaClientesContar();
     });
   });
   setInterval(function(){ var e = $("pdRelogio"); if (e && !$("pdPainel").hidden) e.textContent = new Date().toLocaleString("pt-BR"); }, 1000);
@@ -3163,6 +3183,7 @@ window.pagamentoEfetuado = function(){
     else if (abaAtual === "estoque") desenharEstoque();
     else if (abaAtual === "fechamento") desenharFechamento();
     else if (abaAtual === "videos" && window.adegaPainelVideos) window.adegaPainelVideos();
+    else if (abaAtual === "clientes" && window.adegaPainelClientes) window.adegaPainelClientes();
   }
 
   // ---------- PRODUTOS ----------
@@ -3702,4 +3723,5 @@ window.pagamentoEfetuado = function(){
 })();
 </script>
 
+<script src="comunidade.js" defer></script>
 </body></html>
