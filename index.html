@@ -1270,10 +1270,22 @@ window.pagamentoEfetuado = function(){
       <label>Senha<input id="pdSenha" type="password" autocomplete="new-password"></label>
       <button class="pd-btn" type="submit">Entrar no painel</button>
       <p id="pdGateMsg" class="pd-msg" role="status" aria-live="polite"></p>
+      <button id="pdEsqueci" type="button" style="background:none;border:0;color:#39E4FF;font:600 14px 'JetBrains Mono',monospace;cursor:pointer;padding:0;justify-self:start;text-decoration:underline">Esqueci a senha</button>
     </div>
     <div id="pdConfig1" class="pd-caixa" hidden style="max-width:520px;width:100%;margin-top:16px;display:grid;gap:12px">
-      <h3>Primeira configuração</h3>
-      <p class="exp">Este site ainda não tem a chave do GitHub. Faça isso uma vez só: cole aqui a chave de acesso criada no GitHub da Adega e crie a senha do painel. A chave fica trancada com essa senha; depois disso, o dono só usa a senha.</p>
+      <h3 id="pdCfgTit">Primeira configuração</h3>
+      <div id="pdEsqueciPassos" hidden style="display:grid;gap:8px">
+        <p class="exp">Sem problema. Você cria uma senha nova usando uma chave nova do GitHub da Adega. Só quem entra no GitHub da Adega consegue fazer isso, então continua seguro.</p>
+        <ol class="exp" style="margin:0;padding-left:20px;display:grid;gap:4px">
+          <li>Abra <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:#39E4FF">a página de chave nova do GitHub</a>. Confira, na foto lá em cima à direita, que está na conta <b>adegasdosbrutos-lgtm</b>.</li>
+          <li>Nome: <b>Painel da Adega</b>. Validade: <b>No expiration</b>.</li>
+          <li>Em Repository access, marque <b>Only select repositories</b> e escolha <b>adega-dados</b> e <b>adegasdosbrutos-lgtm.github.io</b>.</li>
+          <li>Em Permissions, em <b>Contents</b>, escolha <b>Read and write</b>.</li>
+          <li>Aperte <b>Generate token</b>, copie a chave e cole aqui embaixo. Depois crie a senha nova duas vezes.</li>
+          <li>No fim, no GitHub, apague a chave antiga (a mais velha com o nome Painel da Adega).</li>
+        </ol>
+      </div>
+      <p id="pdCfgExp" class="exp">Este site ainda não tem a chave do GitHub. Faça isso uma vez só: cole aqui a chave de acesso criada no GitHub da Adega e crie a senha do painel. A chave fica trancada com essa senha; depois disso, o dono só usa a senha.</p>
       <label>Chave de acesso do GitHub (começa com github_pat_)<input id="pdCfgChave" type="password" autocomplete="off" spellcheck="false"></label>
       <label>Senha do painel<input id="pdCfgSenha1" type="password" autocomplete="new-password"></label>
       <label>Repita a senha<input id="pdCfgSenha2" type="password" autocomplete="new-password"></label>
@@ -3625,6 +3637,16 @@ window.pagamentoEfetuado = function(){
   document.querySelectorAll(".guia-abrir").forEach(function(b){ b.addEventListener("click", function(){ $("guiaAudio").hidden = false; }); });
   document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !$("guiaAudio").hidden) { e.stopImmediatePropagation(); parar(); $("guiaAudio").hidden = true; } }, true);
 
+  // esqueci a senha: mostra a caixa de chave nova + senha nova
+  var esq = $("pdEsqueci");
+  if (esq) esq.addEventListener("click", function(){
+    $("pdCfgTit").textContent = "Criar senha nova";
+    $("pdCfgExp").hidden = true; $("pdEsqueciPassos").hidden = false;
+    $("pdCfgBtn").textContent = "Salvar senha nova e entrar";
+    $("pdConfig1").hidden = false; $("pdGateMsg").textContent = "";
+    $("pdConfig1").scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(function(){ try { $("pdCfgChave").focus(); } catch(e) {} }, 300);
+  });
   // primeira configuração
   var cfg = $("pdCfgBtn");
   if (cfg) cfg.addEventListener("click", function(){
