@@ -215,7 +215,7 @@ html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shado
 
   // ---------- carregar ----------
   async function carregarPublico(){
-    try { var r = await fetch("produtos.json?t=" + Date.now(), { cache: "no-store" }); PROD = (await r.json()).filter(function(x){ return x.categoria !== "Cigarros e acessórios"; }); } catch(e) { PROD = []; }
+    try { var r = await fetch("produtos.json?t=" + Date.now(), { cache: "no-store" }); PROD = (await r.json()).filter(function(x){ return x.categoria !== "Cigarros e acessórios" && !x.oculto; }); } catch(e) { PROD = []; }
     avisar("itens");
   }
   async function carregarDono(){
@@ -303,7 +303,7 @@ html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shado
         update: async function(patch){
           if (nome !== "itens" || !token) throw new Error("sem acesso");
           var it = PROD.filter(function(x){ return x.id === id; })[0]; if (!it) throw new Error("não achei");
-          var antes = Object.assign({}, it); Object.assign(it, patch); avisar("itens");
+          var antes = Object.assign({}, it); Object.assign(it, patch); if ("preco" in patch || "nome" in patch) delete it.oculto; avisar("itens");
           try {
             if (it.balcao) await gravarJSON(DADOS, "produtos-balcao.json", PROD.filter(function(x){ return x.balcao; }), "Item de balcão alterado: " + it.nome);
             else await gravarJSON(SITE, "produtos.json", PROD.filter(function(x){ return !x.balcao; }), "Produto alterado: " + it.nome);
@@ -763,7 +763,7 @@ h1{
 <div class="wrap">
   <div class="masthead"><div class="masthead-in">
   <header class="hero">
-    <span class="tag">Pré-inauguração · Lista de preços</span>
+    <span class="tag">Lista de preços</span>
     <h1 id="titulo" class="ticker-title" aria-label="Adega dos Brutos"><span class="ticker-track"><span class="ticker-group" data-loja="nome">Adega dos Brutos</span><span class="ticker-group" data-loja="nome" aria-hidden="true">Adega dos Brutos</span></span></h1>
 <script>
 (function(){

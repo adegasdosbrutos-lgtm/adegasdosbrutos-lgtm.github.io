@@ -6,13 +6,14 @@
   "nome": "ballantane",
   "ordem": 1,
   "preco": 9,
-  "id": "i001"
+  "id": "i001",
+  "oculto": true
  },
  {
   "categoria": "Whiskies",
   "esgotado": true,
   "fotoId": "65a4fbac556f67a0cb0a926225b6ca2e.png",
-  "nome": "Cavalo / White Horse (1L) (?)",
+  "nome": "White Horse (1L)",
   "ordem": 2,
   "preco": 79.5,
   "id": "i002"
@@ -90,7 +91,8 @@
   "nome": "Jack (sabor não legível)",
   "ordem": 22,
   "preco": 100,
-  "id": "i022"
+  "id": "i022",
+  "oculto": true
  },
  {
   "categoria": "Whiskies",
@@ -106,7 +108,8 @@
   "nome": "Atack zumbi (?)",
   "ordem": 49,
   "preco": 120,
-  "id": "i049"
+  "id": "i049",
+  "oculto": true
  },
  {
   "categoria": "Cachaças e vinhos",
@@ -266,7 +269,8 @@
   "nome": "Kaiser (?)",
   "ordem": 72,
   "preco": 6,
-  "id": "i072"
+  "id": "i072",
+  "oculto": true
  },
  {
   "categoria": "Cervejas",
@@ -274,7 +278,8 @@
   "nome": "Skol original (?)",
   "ordem": 73,
   "preco": 1,
-  "id": "i073"
+  "id": "i073",
+  "oculto": true
  },
  {
   "categoria": "Cervejas",
@@ -282,7 +287,8 @@
   "nome": "Bud Light (?)",
   "ordem": 74,
   "preco": 6,
-  "id": "i074"
+  "id": "i074",
+  "oculto": true
  },
  {
   "categoria": "Bebidas mistas",
@@ -338,7 +344,8 @@
   "nome": "Guaraná Antarctica lata 350ml (fardo de 12)",
   "ordem": 81,
   "preco": 2.89,
-  "id": "i081"
+  "id": "i081",
+  "oculto": true
  },
  {
   "categoria": "Refrigerantes e sucos",
@@ -370,7 +377,8 @@
   "nome": "Dolly guaraná lata 350ml (fardo de 12)",
   "ordem": 85,
   "preco": 4.13,
-  "id": "i085"
+  "id": "i085",
+  "oculto": true
  },
  {
   "categoria": "Refrigerantes e sucos",
@@ -383,7 +391,7 @@
  {
   "categoria": "Refrigerantes e sucos",
   "fotoId": "58b586828d95eb60e5ea5c69ac9872af.png",
-  "nome": "Suco de laranja (1L, Maguary)",
+  "nome": "Suco Maguary laranja (1L)",
   "ordem": 91,
   "preco": 12.4,
   "id": "i091"
@@ -394,7 +402,8 @@
   "nome": "Halls (display de 21, menta)",
   "ordem": 92,
   "preco": 2.21,
-  "id": "i092"
+  "id": "i092",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -402,7 +411,8 @@
   "nome": "Trident (display de 21)",
   "ordem": 93,
   "preco": 2.98,
-  "id": "i093"
+  "id": "i093",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -418,7 +428,8 @@
   "nome": "Pururuca (?)",
   "ordem": 95,
   "preco": 5,
-  "id": "i095"
+  "id": "i095",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -426,7 +437,8 @@
   "nome": "Lobitos (?)",
   "ordem": 96,
   "preco": 5,
-  "id": "i096"
+  "id": "i096",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -434,7 +446,8 @@
   "nome": "Ouriço branco (?)",
   "ordem": 97,
   "preco": 5,
-  "id": "i097"
+  "id": "i097",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -442,7 +455,8 @@
   "nome": "Palito sabores (?)",
   "ordem": 98,
   "preco": 5,
-  "id": "i098"
+  "id": "i098",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -450,7 +464,8 @@
   "nome": "Palito / ovo (?)",
   "ordem": 99,
   "preco": 5,
-  "id": "i099"
+  "id": "i099",
+  "oculto": true
  },
  {
   "categoria": "Isqueiros",
@@ -474,7 +489,8 @@
   "nome": "Copo 700 ml (pacote de 50)",
   "ordem": 113,
   "preco": 1.22,
-  "id": "i113"
+  "id": "i113",
+  "oculto": true
  },
  {
   "categoria": "Descartáveis",
@@ -482,7 +498,8 @@
   "nome": "Copo 500 ml (pacote de 50)",
   "ordem": 114,
   "preco": 0.97,
-  "id": "i114"
+  "id": "i114",
+  "oculto": true
  },
  {
   "categoria": "Descartáveis",
@@ -490,7 +507,8 @@
   "nome": "Copo 300 ml (pacote de 100)",
   "ordem": 115,
   "preco": 0.67,
-  "id": "i115"
+  "id": "i115",
+  "oculto": true
  },
  {
   "categoria": "Descartáveis",
@@ -498,7 +516,8 @@
   "nome": "Copo 180 ml (pacote de 100)",
   "ordem": 116,
   "preco": 0.6,
-  "id": "i116"
+  "id": "i116",
+  "oculto": true
  },
  {
   "categoria": "Descartáveis",
@@ -506,7 +525,8 @@
   "nome": "Copo 100 ml de papel (pacote de 100)",
   "ordem": 117,
   "preco": 0.88,
-  "id": "i117"
+  "id": "i117",
+  "oculto": true
  },
  {
   "categoria": "Descartáveis",
@@ -514,7 +534,8 @@
   "nome": "Copo 50 ml de café, plástico (pacote de 100)",
   "ordem": 118,
   "preco": 0.62,
-  "id": "i118"
+  "id": "i118",
+  "oculto": true
  },
  {
   "categoria": "Descartáveis",
@@ -663,7 +684,7 @@
  {
   "categoria": "Isqueiros",
   "fotoId": "bbac3613798f4eceff5bc433d1fb3143.png",
-  "nome": "Bic Pequeno",
+  "nome": "Isqueiro Bic pequeno",
   "ordem": 205,
   "preco": 6.5,
   "id": "c205"
@@ -674,7 +695,8 @@
   "nome": "Bala de hortelã (30x600g)",
   "ordem": 250,
   "preco": 3,
-  "id": "d001"
+  "id": "d001",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -682,7 +704,8 @@
   "nome": "Bala de banana (30x500g)",
   "ordem": 251,
   "preco": 3,
-  "id": "d002"
+  "id": "d002",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -690,7 +713,8 @@
   "nome": "Bala amendoim crocante (30x500g)",
   "ordem": 252,
   "preco": 3,
-  "id": "d003"
+  "id": "d003",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -698,7 +722,8 @@
   "nome": "Bala de hortelã mastigável (30x500g)",
   "ordem": 253,
   "preco": 3,
-  "id": "d004"
+  "id": "d004",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -706,7 +731,8 @@
   "nome": "Bala frutas sortidas (30x600g)",
   "ordem": 254,
   "preco": 3,
-  "id": "d005"
+  "id": "d005",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -714,7 +740,8 @@
   "nome": "Bala de hortelã (50x300g)",
   "ordem": 255,
   "preco": 3,
-  "id": "d006"
+  "id": "d006",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -722,7 +749,8 @@
   "nome": "Wafer Danubio chocolate branco (50x75g)",
   "ordem": 256,
   "preco": 4,
-  "id": "d007"
+  "id": "d007",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -730,7 +758,8 @@
   "nome": "Wafer Surf morango (50x75g)",
   "ordem": 257,
   "preco": 4,
-  "id": "d008"
+  "id": "d008",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -738,7 +767,8 @@
   "nome": "Wafer Danny doce de leite (50x75g)",
   "ordem": 258,
   "preco": 4,
-  "id": "d009"
+  "id": "d009",
+  "oculto": true
  },
  {
   "categoria": "Doces e salgadinhos",
@@ -746,7 +776,8 @@
   "nome": "Wafer Danubio chocolate (50x75g)",
   "ordem": 259,
   "preco": 4,
-  "id": "d010"
+  "id": "d010",
+  "oculto": true
  },
  {
   "categoria": "Whiskies",
@@ -783,7 +814,7 @@
  {
   "categoria": "Refrigerantes e sucos",
   "fotoId": "11d31589ea3258ff25a614fa335e6fab.png",
-  "nome": "Refrigerante Guaraná Antarctica Zero",
+  "nome": "Guaraná Antarctica Zero",
   "ordem": 264,
   "preco": 3.6,
   "id": "b005"
@@ -855,7 +886,7 @@
  {
   "categoria": "Bebidas mistas",
   "fotoId": "8f7cdb5bd1e958256a36f22e31e5fa8c.png",
-  "nome": "Lata Skol Beats Zodiac Elemento Água",
+  "nome": "Skol Beats Zodiac Elemento Água (lata)",
   "ordem": 277,
   "preco": 5.65,
   "id": "b018"
@@ -863,7 +894,7 @@
  {
   "categoria": "Chope",
   "fotoId": "cc4bc6a123adf9c4c0f98bc88d4b01a4.png",
-  "nome": "Cerveja Heineken barril (gelado)",
+  "nome": "Heineken barril (gelado)",
   "ordem": 282,
   "preco": 120.28,
   "id": "b023"
@@ -871,7 +902,7 @@
  {
   "categoria": "Chope",
   "fotoId": "5ce7ab8e92c0bff2d9c6158bdeff4dcc.png",
-  "nome": "Chopp Brahma Claro 100L + chopeira",
+  "nome": "Chope Brahma Claro 100L + chopeira",
   "ordem": 283,
   "preco": 1649.03,
   "id": "b024"
@@ -879,7 +910,7 @@
  {
   "categoria": "Chope",
   "fotoId": "85aea1d846d1ed0fb818b70fd0c5066c.png",
-  "nome": "Chopp Brahma Claro 50L + chopeira",
+  "nome": "Chope Brahma Claro 50L + chopeira",
   "ordem": 284,
   "preco": 813.17,
   "id": "b025"
@@ -887,7 +918,7 @@
  {
   "categoria": "Chope",
   "fotoId": "01a9771f91d83c94a1d3ffba9ac91040.png",
-  "nome": "Chopp Brahma Claro 50L (só barril)",
+  "nome": "Chope Brahma Claro 50L (só barril)",
   "ordem": 285,
   "preco": 732.7,
   "id": "b026"
@@ -895,7 +926,7 @@
  {
   "categoria": "Cachaças e vinhos",
   "fotoId": "9f357198256cfdde92686d990a33495c.png",
-  "nome": "Chopp de vinho Pink Moon 2L (gelado)",
+  "nome": "Chope de vinho Pink Moon 2L (gelado)",
   "ordem": 286,
   "preco": 22.45,
   "id": "b027"
@@ -951,7 +982,7 @@
  {
   "categoria": "Cervejas",
   "fotoId": "cfb5ade8c028f5de22f29e5208c4ad9c.png",
-  "nome": "Cerveja Heineken Retornável 600ml (caixa com 24)",
+  "nome": "Heineken retornável 600ml (caixa com 24)",
   "ordem": 293,
   "preco": 206.51,
   "id": "b034"
@@ -959,7 +990,7 @@
  {
   "categoria": "Cervejas",
   "fotoId": "c7497435e203f3374c4421c28a8e5fb4.png",
-  "nome": "Cerveja Corona 473ml (pack com 12)",
+  "nome": "Corona lata 473ml (pack com 12)",
   "ordem": 294,
   "preco": 72.52,
   "id": "b035"
@@ -967,7 +998,7 @@
  {
   "categoria": "Cervejas",
   "fotoId": "80dc7f7ac02da2d09b28d91fa6603508.png",
-  "nome": "Cerveja Budweiser 473ml (pack com 12)",
+  "nome": "Budweiser lata 473ml (pack com 12)",
   "ordem": 295,
   "preco": 56.86,
   "id": "b036"
@@ -983,7 +1014,7 @@
  {
   "categoria": "Cervejas",
   "fotoId": "5014ec260a4e4d3d7cba241c46cb8f29.png",
-  "nome": "Cerveja Spaten 473ml (pack com 12)",
+  "nome": "Spaten lata 473ml (pack com 12)",
   "ordem": 297,
   "preco": 57.54,
   "id": "b038"
@@ -1042,7 +1073,8 @@
   "nome": "Jack Daniel's Old No. 7 Mini (50ml)",
   "ordem": 307,
   "preco": 65,
-  "id": "w07"
+  "id": "w07",
+  "oculto": true
  },
  {
   "categoria": "Whiskies",
@@ -1138,7 +1170,8 @@
   "nome": "Old Parr 12 anos Scotch (500ml)",
   "ordem": 319,
   "preco": 190,
-  "id": "w19"
+  "id": "w19",
+  "oculto": true
  },
  {
   "categoria": "Whiskies",
@@ -1146,7 +1179,8 @@
   "nome": "Johnnie Walker Black Label (500ml)",
   "ordem": 320,
   "preco": 160,
-  "id": "w20"
+  "id": "w20",
+  "oculto": true
  },
  {
   "categoria": "Whiskies",
@@ -1282,7 +1316,8 @@
   "nome": "Jack Daniel's Old No. 7 (200ml)",
   "ordem": 337,
   "preco": 100,
-  "id": "w37"
+  "id": "w37",
+  "oculto": true
  },
  {
   "categoria": "Whiskies",
