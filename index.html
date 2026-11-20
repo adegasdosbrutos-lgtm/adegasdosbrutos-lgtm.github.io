@@ -21,6 +21,26 @@
 .idade .sim,.idade .nao,#vendaResp .ok{border:0;border-radius:12px;padding:13px 16px;font-weight:700;font-size:15px;font-family:inherit;cursor:pointer}
 .idade .sim,#vendaResp .ok{background:#f2b83a;color:#120d08}
 .idade .nao{background:transparent;color:#efe6d4;border:1px solid rgba(239,230,212,.35)}
+
+/* ---- fundo do topo: arte da Adega, viva (zoom lento, luz pulsando, reflexo dourado) ---- */
+html body .masthead{overflow:clip}
+html body .masthead::before{
+  background:
+    linear-gradient(105deg,transparent 38%,rgba(255,214,140,.20) 50%,transparent 62%) 150% 0/300% 100% no-repeat,
+    radial-gradient(ellipse at 50% 42%,transparent 48%,rgba(10,5,2,.5) 100%),
+    url("fotos/fundo-celular.jpg") center 0%/cover no-repeat;
+  filter:none;transform-origin:50% 38%;will-change:transform,filter;
+  animation:fundoVivo 9s ease-in-out infinite alternate,fundoReflexo 7s linear infinite;
+}
+@media (min-width:700px){
+  html body .masthead::before{background:
+    linear-gradient(105deg,transparent 38%,rgba(255,214,140,.20) 50%,transparent 62%) 150% 0/300% 100% no-repeat,
+    radial-gradient(ellipse at 50% 42%,transparent 48%,rgba(10,5,2,.5) 100%),
+    url("fotos/fundo-largo.jpg") center 0%/cover no-repeat}
+}
+@keyframes fundoVivo{0%{transform:scale(1);filter:brightness(1.02) saturate(1.06) contrast(1.02)}100%{transform:scale(1.06);filter:brightness(1.2) saturate(1.25) contrast(1.06)}}
+@keyframes fundoReflexo{0%{background-position:150% 0,0 0,center 0%}100%{background-position:-50% 0,0 0,center 0%}}
+@media (prefers-reduced-motion:reduce){html body .masthead::before{animation:none}}
 </style></head><body>
 <script>
 // ===== Dados da loja: nome, WhatsApp e Pix =====
