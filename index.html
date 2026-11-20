@@ -303,7 +303,7 @@ html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shado
         update: async function(patch){
           if (nome !== "itens" || !token) throw new Error("sem acesso");
           var it = PROD.filter(function(x){ return x.id === id; })[0]; if (!it) throw new Error("não achei");
-          var antes = Object.assign({}, it); Object.assign(it, patch); if ("preco" in patch || "nome" in patch) delete it.oculto; avisar("itens");
+          var antes = Object.assign({}, it); Object.assign(it, patch); if ("oculto" in patch && !patch.oculto) delete it.oculto; avisar("itens");
           try {
             if (it.balcao) await gravarJSON(DADOS, "produtos-balcao.json", PROD.filter(function(x){ return x.balcao; }), "Item de balcão alterado: " + it.nome);
             else await gravarJSON(SITE, "produtos.json", PROD.filter(function(x){ return !x.balcao; }), "Produto alterado: " + it.nome);
@@ -1317,6 +1317,7 @@ window.pagamentoEfetuado = function(){
                 <label>Estoque mínimo (un.)<input id="pdEdMinimo" type="number" min="0" step="1"></label>
               </div>
               <label style="display:flex;gap:8px;align-items:center;color:var(--txt)"><input id="pdEdEsgotado" type="checkbox" style="width:auto"> Esgotado (aparece riscado no site)</label>
+              <label style="display:flex;gap:8px;align-items:center;color:var(--txt)"><input id="pdEdOculto" type="checkbox" style="width:auto"> Esconder do site (o cliente não vê este produto)</label>
               <p id="pdEdMargem" class="exp"></p>
               <div class="pd-linha-botoes">
                 <button id="pdEdSalvar" class="pd-btn ouro" type="button">Salvar mudanças</button>
@@ -3200,14 +3201,22 @@ window.pagamentoEfetuado = function(){
     var lista = ITENS.filter(function(it){ return (!cat || it.categoria === cat) && (!q || String(it.nome).toLowerCase().indexOf(q) >= 0); });
     $("pdProdLista").innerHTML = lista.map(function(it){
       var c = custoDe(it), p = Number(it.preco) || 0, mg = p ? (p - c) / p * 100 : 0;
-      return '<tr><td><img class="pd-mini" alt="" loading="lazy" src="' + esc(fotoSrc(it)) + '"></td><td>' + esc(it.nome) + (it.esgotado ? ' <span class="pd-tag zerado">ESGOTADO</span>' : '') + '</td><td>' + esc(it.categoria) +
+      return '<tr><td><img class="pd-mini" alt="" loading="lazy" src="' + esc(fotoSrc(it)) + '"></td><td>' + esc(it.nome) + (it.esgotado ? ' <span class="pd-tag zerado">ESGOTADO</span>' : '') + (it.oculto ? ' <span class="pd-tag repor">ESCONDIDO</span>' : '') + '</td><td>' + esc(it.categoria) +
         '</td><td class="n">' + (it.preco == null ? "—" : brl(p)) + '</td><td class="n">' + brl(c) + (custoEstimado(it) ? ' <span title="custo estimado" style="color:var(--sub)">*</span>' : '') +
-        '</td><td class="n">' + (p ? num(mg, 1) + "%" : "—") + '</td><td class="n">' + num(s[it.id]) + '</td><td><button class="pd-btn" data-edit="' + esc(it.id) + '" type="button">Modificar</button></td></tr>';
+        '</td><td class="n">' + (p ? num(mg, 1) + "%" : "—") + '</td><td class="n">' + num(s[it.id]) + '</td><td><button class="pd-btn" data-edit="' + esc(it.id) + '" type="button">Modificar</button>' + (it.balcao ? '' : ' <button class="pd-btn fantasma" data-ocultar="' + esc(it.id) + '" type="button">' + (it.oculto ? 'Mostrar no site' : 'Esconder do site') + '</button>') + '</td></tr>';
     }).join("") || '<tr><td colspan="8"><div class="pd-vazio">Nenhum produto encontrado.</div></td></tr>';
   }
   $("pdBusca").addEventListener("input", desenharProdutos);
   $("pdCat").addEventListener("change", desenharProdutos);
-  $("pdProdLista").addEventListener("click", function(e){ var b = e.target.closest("[data-edit]"); if (b) abrirEditor(b.dataset.edit); });
+  $("pdProdLista").addEventListener("click", function(e){
+    var b = e.target.closest("[data-edit]"); if (b) { abrirEditor(b.dataset.edit); return; }
+    var o = e.target.closest("[data-ocultar]"); if (!o) return;
+    var it = itemPorId(o.dataset.ocultar); if (!it) return;
+    var esconder = !it.oculto; o.disabled = true; o.textContent = "Salvando…";
+    db.collection("itens").doc(it.id).update({ oculto: esconder }).then(function(){
+      desenharProdutos();
+    }).catch(function(err){ o.disabled = false; o.textContent = esconder ? "Esconder do site" : "Mostrar no site"; alert("Não consegui salvar. Confira a internet e tente de novo."); });
+  });
 
   var edId = null, edFoto = null;
   function abrirEditor(id){
@@ -3221,6 +3230,7 @@ window.pagamentoEfetuado = function(){
     $("pdEdInicial").value = inicialDe(it);
     $("pdEdMinimo").value = minimoDe(it);
     $("pdEdEsgotado").checked = !!it.esgotado;
+    $("pdEdOculto").checked = !!it.oculto;
     $("pdEdArquivo").value = "";
     msg("pdEdMsg", custoEstimado(it) ? "O custo deste produto ainda é estimado. Coloque o valor da nota do fornecedor." : "");
     atualizarMargem();
@@ -3259,7 +3269,7 @@ window.pagamentoEfetuado = function(){
     var btn = $("pdEdSalvar"); btn.disabled = true; msg("pdEdMsg", "Salvando…");
     var subir = edFoto ? (assets ? assets.upload(edFoto) : Promise.reject(new Error("semfoto"))) : Promise.resolve(null);
     subir.then(function(r){
-      var patch = { nome: nome, preco: preco, esgotado: $("pdEdEsgotado").checked };
+      var patch = { nome: nome, preco: preco, esgotado: $("pdEdEsgotado").checked, oculto: $("pdEdOculto").checked };
       if (r && r.id) patch.fotoId = r.id;
       return db.collection("itens").doc(it.id).update(patch);
     }).then(function(){
