@@ -22,26 +22,33 @@
 .idade .sim,#vendaResp .ok{background:#f2b83a;color:#120d08}
 .idade .nao{background:transparent;color:#efe6d4;border:1px solid rgba(239,230,212,.35)}
 
-/* ---- fundo do topo: arte da Adega, viva (zoom lento, luz pulsando, reflexo dourado) ---- */
-html body .masthead{overflow:clip}
-html body .masthead::before{
+/* ---- fundo da tela inteira: arte da Adega, viva (zoom lento, luz pulsando, reflexo dourado) ---- */
+html{background:#140b06}
+html body{background:transparent}
+html body::before{opacity:.35}
+html body .masthead::before{background:none;animation:none;filter:none}
+html body #fundoVivo{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+html body #fundoVivo::before{content:"";position:absolute;inset:-3%;
   background:
-    linear-gradient(105deg,transparent 38%,rgba(255,214,140,.20) 50%,transparent 62%) 150% 0/300% 100% no-repeat,
-    radial-gradient(ellipse at 50% 42%,transparent 48%,rgba(10,5,2,.5) 100%),
-    url("fotos/fundo-celular.jpg") center 0%/cover no-repeat;
-  filter:none;transform-origin:50% 38%;will-change:transform,filter;
-  animation:fundoVivo 9s ease-in-out infinite alternate,fundoReflexo 7s linear infinite;
+    linear-gradient(105deg,transparent 38%,rgba(255,214,140,.18) 50%,transparent 62%) 150% 0/300% 100% no-repeat,
+    linear-gradient(to bottom,rgba(12,7,3,.30),rgba(12,7,3,0) 22%,rgba(12,7,3,.12) 60%,rgba(12,7,3,0) 78%),
+    url("fotos/tela-celular.jpg") center bottom/cover no-repeat;
+  transform-origin:50% 60%;will-change:transform,filter;
+  animation:fundoVivo 9s ease-in-out infinite alternate,fundoReflexo 7s linear infinite}
+@media (min-aspect-ratio:4/5){
+  html body #fundoVivo::before{background:
+    linear-gradient(105deg,transparent 38%,rgba(255,214,140,.18) 50%,transparent 62%) 150% 0/300% 100% no-repeat,
+    linear-gradient(to bottom,rgba(12,7,3,.30),rgba(12,7,3,0) 22%,rgba(12,7,3,.12) 60%,rgba(12,7,3,0) 78%),
+    url("fotos/tela-computador.jpg") center bottom/cover no-repeat}
 }
-@media (min-width:700px){
-  html body .masthead::before{background:
-    linear-gradient(105deg,transparent 38%,rgba(255,214,140,.20) 50%,transparent 62%) 150% 0/300% 100% no-repeat,
-    radial-gradient(ellipse at 50% 42%,transparent 48%,rgba(10,5,2,.5) 100%),
-    url("fotos/fundo-largo.jpg") center 0%/cover no-repeat}
-}
-@keyframes fundoVivo{0%{transform:scale(1);filter:brightness(1.02) saturate(1.06) contrast(1.02)}100%{transform:scale(1.06);filter:brightness(1.2) saturate(1.25) contrast(1.06)}}
-@keyframes fundoReflexo{0%{background-position:150% 0,0 0,center 0%}100%{background-position:-50% 0,0 0,center 0%}}
-@media (prefers-reduced-motion:reduce){html body .masthead::before{animation:none}}
+@keyframes fundoVivo{0%{transform:scale(1);filter:brightness(1.0) saturate(1.05) contrast(1.02)}100%{transform:scale(1.045);filter:brightness(1.18) saturate(1.22) contrast(1.05)}}
+@keyframes fundoReflexo{0%{background-position:150% 0,0 0,center bottom}100%{background-position:-50% 0,0 0,center bottom}}
+html body .empty-state{background:rgba(14,8,4,.38)}
+html body .empty-state,html body .empty-state *{text-shadow:0 2px 4px #000,0 0 10px rgba(0,0,0,.95),0 0 18px rgba(0,0,0,.8)}
+html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shadow(0 0 14px rgba(0,0,0,.7))}
+@media (prefers-reduced-motion:reduce){html body #fundoVivo::before{animation:none}}
 </style></head><body>
+<div id="fundoVivo" aria-hidden="true"></div>
 <script>
 // ===== Dados da loja: nome, WhatsApp e Pix =====
 // Ficam em loja.json, no projeto do site. O dono muda pelo painel (aba Configurar > Dados da loja).
