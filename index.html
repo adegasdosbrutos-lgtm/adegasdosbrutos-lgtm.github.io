@@ -26,7 +26,8 @@
 html{background:#140b06}
 html body{background:transparent}
 html body::before{opacity:.35}
-html body .masthead::before{background:none;animation:none;filter:none}
+/* celular: garrafas de vinho no topo (foto antiga), arte dos Brutos embaixo. Computador: só a arte. */
+@media (min-aspect-ratio:4/5){html body .masthead::before{background:none;animation:none;filter:none}}
 html body #fundoVivo{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
 html body #fundoVivo::before{content:"";position:absolute;inset:-3%;
   background:
