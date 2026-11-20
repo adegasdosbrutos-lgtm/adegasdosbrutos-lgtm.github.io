@@ -48,6 +48,34 @@ html body .empty-state{background:rgba(14,8,4,.38)}
 html body .empty-state,html body .empty-state *{text-shadow:0 2px 4px #000,0 0 10px rgba(0,0,0,.95),0 0 18px rgba(0,0,0,.8)}
 html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shadow(0 0 14px rgba(0,0,0,.7))}
 @media (prefers-reduced-motion:reduce){html body #fundoVivo::before{animation:none}}
+
+/* ---- vídeos da adega e grupo do WhatsApp ---- */
+.vid-cartao{max-width:1120px;margin:22px auto 0;padding:0 16px}
+.vid-cartao button{width:100%;display:flex;align-items:center;gap:16px;text-align:left;cursor:pointer;background:linear-gradient(120deg,rgba(242,184,58,.22),rgba(20,11,5,.82));border:1px solid rgba(242,184,58,.6);border-radius:18px;padding:14px 16px;color:#f3ead8;font:inherit}
+.vid-cartao .vc-play{flex:none;width:58px;height:58px;border-radius:50%;background:#f2b83a;color:#1a0f05;display:grid;place-items:center;font-size:26px;box-shadow:0 0 18px rgba(242,184,58,.55)}
+.vid-cartao strong{display:block;font-size:18px;color:#ffd77a}.vid-cartao small{display:block;font-size:14px;opacity:.85;margin-top:2px}
+.vid-cartao .vc-seta{margin-left:auto;font-size:24px;color:#f2b83a}
+.vid-pag{position:fixed;inset:0;z-index:2147482000;background:#000;color:#fff}
+.vid-pag[hidden]{display:none}
+.vid-topo{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(rgba(0,0,0,.7),transparent)}
+.vid-topo strong{flex:1;text-align:center;font-size:17px;color:#ffd77a}
+.vid-topo button{background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:8px 14px;font:600 14px inherit;font-family:inherit;cursor:pointer}
+.vid-feed{position:absolute;inset:0;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain}
+.vid-item{position:relative;height:100vh;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;display:grid;place-items:center;background:#000}
+.vid-item video{width:100%;height:100%;object-fit:contain;max-width:min(100vw,calc(100dvh * 9 / 16))}
+.vid-info{position:absolute;left:0;right:0;bottom:0;padding:18px 16px calc(22px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.8));display:flex;align-items:flex-end;gap:12px}
+.vid-info p{margin:0;flex:1;font-size:17px;font-weight:700;text-shadow:0 2px 6px #000}
+.vid-info button{flex:none;background:#25d366;color:#04230f;border:0;border-radius:999px;padding:10px 16px;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer}
+.vid-pausa{position:absolute;inset:0;display:grid;place-items:center;font-size:70px;color:rgba(255,255,255,.85);pointer-events:none;opacity:0;transition:opacity .2s}
+.vid-item.pausado .vid-pausa{opacity:1}
+.grupo-btn{justify-self:center;display:inline-flex;align-items:center;gap:10px;background:#25d366;color:#04230f;font-weight:800;font-size:17px;text-decoration:none;border-radius:999px;padding:13px 22px;box-shadow:0 0 22px rgba(37,211,102,.35)}
+.grupo-btn[hidden]{display:none}
+.grupo-btn small{display:block;font-weight:600;font-size:12px;opacity:.85}
+.pd-vid-lista{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.pd-vid{background:#05080a;border:1px solid var(--linha);border-radius:12px;overflow:hidden;display:grid}
+.pd-vid img{width:100%;aspect-ratio:9/16;object-fit:cover;background:#111}
+.pd-vid span{font-size:13px;padding:6px 8px;min-height:2.6em}
+.pd-vid .pd-btn{margin:0 8px 8px;padding:8px}
 </style></head><body>
 <div id="fundoVivo" aria-hidden="true"></div>
 <script>
@@ -56,8 +84,8 @@ html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shado
 (function(){
   var PADRAO = { nome: "Adega dos Brutos", whatsapp: "11991239748", pixTipo: "celular", pixChave: "11926190514",
     pixTitular: "Walter Henrique de Lima Júnior", pixBanco: "PicPay", pixCidade: "Embu das Artes", dono: "", email: "",
-    endereco: "Rua dos Coqueiros, 325 · Jardim Pinheirinho · Embu das Artes - SP", horario: "", razaoSocial: "", cnpj: "" };
-  var PODE_VAZIO = { dono: 1, email: 1, horario: 1, razaoSocial: 1, cnpj: 1 };
+    endereco: "Rua dos Coqueiros, 325 · Jardim Pinheirinho · Embu das Artes - SP", horario: "", razaoSocial: "", cnpj: "", grupo: "" };
+  var PODE_VAZIO = { dono: 1, email: 1, horario: 1, razaoSocial: 1, cnpj: 1, grupo: 1 };
   function cnpjFmt(c){ c = so(c); return c.length === 14 ? c.slice(0, 2) + "." + c.slice(2, 5) + "." + c.slice(5, 8) + "/" + c.slice(8, 12) + "-" + c.slice(12) : c; }
   window.LOJA = Object.assign({}, PADRAO);
   function so(d){ return String(d || "").replace(/\D/g, ""); }
@@ -75,6 +103,7 @@ html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shado
       el.textContent = k === "whatsapp" ? window.lojaZapFmt(L.whatsapp) : k === "cnpjFmt" ? cnpjFmt(L.cnpj) : (L[k] || "");
     });
     document.querySelectorAll("[data-loja-se]").forEach(function(el){ el.hidden = !L[el.getAttribute("data-loja-se")]; });
+    document.querySelectorAll("[data-loja-href]").forEach(function(el){ var v = L[el.getAttribute("data-loja-href")]; if (v && /^https:\/\/(chat\.whatsapp\.com|whatsapp\.com\/channel|www\.whatsapp\.com\/channel)\//.test(v)) el.href = v; else el.removeAttribute("href"); });
     document.title = L.nome;
     var h = document.getElementById("titulo"); if (h) h.setAttribute("aria-label", L.nome);
   }
@@ -239,6 +268,15 @@ html body .ticker-title{filter:drop-shadow(0 3px 6px rgba(0,0,0,.95)) drop-shado
     var tr = await trancar(token, nova);
     await gravarJSON(SITE, "acesso.json", tr, "Senha do painel trocada");
     acessoMem = tr; return true;
+  };
+  // vídeos da adega: arquivos em videos/ e a lista em videos.json (no projeto do site)
+  window.ghVideosLer = async function(){ return (await lerJSON(SITE, "videos.json")) || []; };
+  window.ghVideosSalvarLista = function(lista){ if (!token) throw new Error("sem acesso"); return gravarJSON(SITE, "videos.json", lista, "Lista de vídeos atualizada"); };
+  window.ghEnviarArquivo = function(caminho, bytes, msg){ if (!token) throw new Error("sem acesso"); return gravar(SITE, caminho, b64Bytes(bytes), msg); };
+  window.ghApagarArquivo = async function(caminho, msg){
+    if (!token) throw new Error("sem acesso");
+    var a = await api("GET", SITE, caminho); if (!a || !a.sha) return;
+    await api("DELETE", SITE, caminho, { message: msg || ("Apagado: " + caminho), sha: a.sha });
   };
   // dados da loja (nome, WhatsApp, Pix)
   window.ghSalvarLoja = async function(obj){
@@ -1235,6 +1273,7 @@ window.pagamentoEfetuado = function(){
       <button class="pd-aba" data-aba="estoque" type="button">📊 Estoque</button>
       <button class="pd-aba" data-aba="fechamento" type="button">📈 Fechamento</button>
       <button class="pd-aba" data-aba="exportar" type="button">⬇ Exportar</button>
+      <button class="pd-aba" data-aba="videos" type="button">🎬 Vídeos</button>
       <button class="pd-aba" data-aba="configurar" type="button">⚙ Configurar</button>
       <button class="pd-aba guia-abrir" type="button">🎧 Guia em áudio</button>
     </div>
@@ -1360,6 +1399,21 @@ window.pagamentoEfetuado = function(){
       </div>
 
       <!-- CONFIGURAR -->
+      <div class="pd-sec" data-sec="videos" hidden>
+        <h2>Vídeos <span>// da adega</span></h2>
+        <p class="exp">Os clientes veem em "Vídeos da adega", um vídeo por tela, como stories, e podem compartilhar no WhatsApp. Vídeo de até 1 minuto e até 40 MB. Em pé fica melhor.</p>
+        <div class="pd-caixa" style="display:grid;gap:12px;max-width:620px">
+          <h3>Publicar vídeo novo</h3>
+          <label>Escolher o vídeo<input id="pdVidArq" type="file" accept="video/mp4,video/quicktime,video/webm,video/*"></label>
+          <label>Legenda<input id="pdVidLeg" maxlength="80" placeholder="Ex.: Chegou cerveja gelada!" autocomplete="off"></label>
+          <div class="pd-linha-botoes"><button id="pdVidPub" class="pd-btn ouro" type="button">Publicar vídeo</button></div>
+          <p id="pdVidMsg" class="pd-msg" role="status" aria-live="polite"></p>
+        </div>
+        <div class="pd-caixa">
+          <h3>Publicados</h3>
+          <div id="pdVidLista" class="pd-vid-lista"></div>
+        </div>
+      </div>
       <div class="pd-sec" data-sec="configurar" hidden>
         <h2>Configurar <span>// loja, senha e contas</span></h2>
         <div class="pd-caixa" style="display:grid;gap:12px;max-width:760px">
@@ -1374,8 +1428,9 @@ window.pagamentoEfetuado = function(){
             <label>CNPJ (opcional)<input id="ljCnpj" inputmode="numeric" placeholder="00.000.000/0000-00" autocomplete="off"></label>
             <label>Endereço<input id="ljEnd" maxlength="120" autocomplete="off"></label>
             <label>Horário de funcionamento<input id="ljHorario" maxlength="80" placeholder="Ex.: Seg a Sáb, 10h às 23h" autocomplete="off"></label>
+            <label>Link do grupo do WhatsApp (opcional)<input id="ljGrupo" inputmode="url" placeholder="https://chat.whatsapp.com/..." autocomplete="off" spellcheck="false"></label>
           </div>
-          <p class="exp">Razão social, CNPJ, endereço e horário aparecem no rodapé do site. Campo vazio não aparece.</p>
+          <p class="exp">Razão social, CNPJ, endereço e horário aparecem no rodapé do site. Com o link do grupo preenchido, aparece no fim do site o botão verde "Entrar no grupo da Adega". Campo vazio não aparece.</p>
           <h3 style="margin-top:6px">Pix</h3>
           <label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--txt)"><input id="ljPixIgual" type="checkbox" style="width:auto"> A chave Pix é o mesmo número do WhatsApp</label>
           <div class="pd-campos">
@@ -1477,7 +1532,15 @@ window.pagamentoEfetuado = function(){
   </div>
 </section>
 
+  <section class="vid-cartao" id="vidCartao" hidden>
+    <button type="button" id="vidAbrir" aria-haspopup="dialog"><span class="vc-play" aria-hidden="true">▶</span><span><strong>Vídeos da adega</strong><small id="vidResumo">Assista e compartilhe</small></span><span class="vc-seta" aria-hidden="true">→</span></button>
+  </section>
+  <div id="vidPagina" class="vid-pag" role="dialog" aria-modal="true" aria-label="Vídeos da adega" hidden>
+    <div class="vid-topo"><button type="button" id="vidFechar">← Voltar</button><strong>Vídeos da adega</strong><button type="button" id="vidSom">🔇 Sem som</button></div>
+    <div id="vidFeed" class="vid-feed"></div>
+  </div>
   <footer class="rodape">
+    <a class="grupo-btn" id="grupoBtn" data-loja-href="grupo" data-loja-se="grupo" target="_blank" rel="noopener" hidden><span aria-hidden="true">💬</span><span>Entrar no grupo da Adega<small>Promoções e novidades no WhatsApp</small></span></a>
     <p class="rd-aviso"><b>Venda e entrega de bebidas alcoólicas proibidas para menores de 18 anos</b> (ECA, art. 81). Na entrega pedimos documento oficial com foto. Se beber, não dirija.</p>
     <p class="rd-aviso">Artigos de tabacaria não são vendidos pelo site: somente no balcão da loja, para maiores de 18 anos.</p>
     <div class="rd-dados">
@@ -1491,6 +1554,73 @@ window.pagamentoEfetuado = function(){
     <button type="button" class="rd-link" id="vrAbrir">Venda responsável e privacidade</button>
     <p class="rd-ano">© 2026 <span data-loja="nome">Adega dos Brutos</span></p>
   </footer>
+<script>
+// ===== Vídeos da adega: lista em videos.json, um vídeo por tela, rola para cima como stories =====
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var lista = [], som = false, obs = null, montado = false;
+  function url(){ return location.origin + location.pathname; }
+  function carregar(){
+    return fetch("videos.json?t=" + Date.now(), { cache: "no-store" }).then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }).then(function(l){
+      lista = Array.isArray(l) ? l : [];
+      $("vidCartao").hidden = !lista.length;
+      $("vidResumo").textContent = lista.length + (lista.length === 1 ? " vídeo · assista e compartilhe" : " vídeos · assista e compartilhe");
+      return lista;
+    });
+  }
+  function compartilhar(v){
+    var txt = (v.legenda ? v.legenda + " · " : "") + "Vídeos da " + ((window.LOJA && window.LOJA.nome) || "Adega dos Brutos") + ": " + url() + "#videos";
+    if (navigator.share) { navigator.share({ title: "Vídeos da adega", text: txt, url: url() + "#videos" }).catch(function(){}); }
+    else window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank", "noopener");
+  }
+  function montar(){
+    var feed = $("vidFeed"); feed.textContent = ""; montado = true;
+    if (obs) obs.disconnect();
+    obs = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        var vd = e.target.querySelector("video");
+        if (e.isIntersecting && e.intersectionRatio > 0.6) { vd.muted = !som; vd.play().catch(function(){}); e.target.classList.remove("pausado"); }
+        else { vd.pause(); }
+      });
+    }, { root: feed, threshold: [0, 0.6, 1] });
+    lista.forEach(function(v){
+      var it = document.createElement("div"); it.className = "vid-item";
+      var vd = document.createElement("video");
+      vd.src = v.arquivo; if (v.poster) vd.poster = v.poster;
+      vd.loop = true; vd.muted = true; vd.playsInline = true; vd.setAttribute("playsinline", ""); vd.preload = "metadata";
+      var pz = document.createElement("div"); pz.className = "vid-pausa"; pz.textContent = "▶";
+      var info = document.createElement("div"); info.className = "vid-info";
+      var p = document.createElement("p"); p.textContent = v.legenda || "";
+      var b = document.createElement("button"); b.type = "button"; b.textContent = "Compartilhar";
+      b.addEventListener("click", function(ev){ ev.stopPropagation(); compartilhar(v); });
+      info.appendChild(p); info.appendChild(b);
+      it.appendChild(vd); it.appendChild(pz); it.appendChild(info);
+      it.addEventListener("click", function(){ if (vd.paused) { vd.play().catch(function(){}); it.classList.remove("pausado"); } else { vd.pause(); it.classList.add("pausado"); } });
+      feed.appendChild(it); obs.observe(it);
+    });
+  }
+  function abrir(){
+    carregar().then(function(){
+      if (!lista.length) return;
+      montar(); $("vidPagina").hidden = false; document.documentElement.style.overflow = "hidden"; $("vidFeed").scrollTop = 0;
+    });
+  }
+  function fechar(){
+    $("vidPagina").hidden = true; document.documentElement.style.overflow = "";
+    document.querySelectorAll("#vidFeed video").forEach(function(v){ v.pause(); });
+    if (location.hash === "#videos") history.replaceState(null, "", location.pathname + location.search);
+  }
+  $("vidAbrir").addEventListener("click", abrir);
+  $("vidFechar").addEventListener("click", fechar);
+  $("vidSom").addEventListener("click", function(){
+    som = !som; this.textContent = som ? "🔊 Com som" : "🔇 Sem som";
+    document.querySelectorAll("#vidFeed video").forEach(function(v){ v.muted = !som; });
+  });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && !$("vidPagina").hidden) fechar(); });
+  window.adegaVideosRecarregar = function(){ carregar(); };
+  carregar().then(function(){ if (location.hash === "#videos" && lista.length) abrir(); });
+})();
+</script>
   <dialog id="vendaResp" aria-labelledby="vrTitulo">
     <h2 id="vrTitulo">Venda responsável e privacidade</h2>
     <ul>
@@ -3032,6 +3162,7 @@ window.pagamentoEfetuado = function(){
     else if (abaAtual === "lancar") { prepararLancar(); desenharUltimos(); }
     else if (abaAtual === "estoque") desenharEstoque();
     else if (abaAtual === "fechamento") desenharFechamento();
+    else if (abaAtual === "videos" && window.adegaPainelVideos) window.adegaPainelVideos();
   }
 
   // ---------- PRODUTOS ----------
@@ -3428,8 +3559,72 @@ window.pagamentoEfetuado = function(){
       $("pdConfig1").hidden = true;
     }, function(e){ m(e && e.message ? e.message : "Não deu certo. Tente de novo.", true); }).then(function(){ cfg.disabled = false; });
   });
+  // vídeos (aba do painel)
+  var vidLista = [];
+  function vidMsg(t, erro){ $("pdVidMsg").textContent = t; $("pdVidMsg").classList.toggle("erro", !!erro); }
+  function vidDesenhar(){
+    var box = $("pdVidLista"); box.textContent = "";
+    if (!vidLista.length) { box.innerHTML = '<p class="exp">Nenhum vídeo publicado.</p>'; return; }
+    vidLista.forEach(function(v, i){
+      var d = document.createElement("div"); d.className = "pd-vid";
+      var im = document.createElement("img"); im.alt = ""; im.onerror = function(){ im.style.visibility = "hidden"; }; if (v.poster) im.src = v.poster + "?t=" + Date.now();
+      var sp = document.createElement("span"); sp.textContent = v.legenda || "(sem legenda)";
+      var b = document.createElement("button"); b.type = "button"; b.className = "pd-btn perigo"; b.textContent = "Apagar";
+      b.addEventListener("click", function(){
+        if (!b.dataset.ok) { b.dataset.ok = "1"; b.textContent = "Toque de novo"; setTimeout(function(){ delete b.dataset.ok; b.textContent = "Apagar"; }, 4000); return; }
+        b.disabled = true; vidMsg("Apagando…");
+        var nova = vidLista.filter(function(_, k){ return k !== i; });
+        window.ghVideosSalvarLista(nova).then(function(){
+          vidLista = nova; vidDesenhar(); vidMsg("Apagado ✓ Some do site em cerca de 1 minuto.");
+          window.ghApagarArquivo(v.arquivo).catch(function(){}); if (v.poster) window.ghApagarArquivo(v.poster).catch(function(){});
+          if (window.adegaVideosRecarregar) window.adegaVideosRecarregar();
+        }, function(){ b.disabled = false; vidMsg("Não consegui apagar. Tente de novo.", true); });
+      });
+      d.appendChild(im); d.appendChild(sp); d.appendChild(b); box.appendChild(d);
+    });
+  }
+  window.adegaPainelVideos = function(){
+    if (!window.ghVideosLer) return;
+    window.ghVideosLer().then(function(l){ vidLista = Array.isArray(l) ? l : []; vidDesenhar(); }, function(){ vidMsg("Não consegui ler a lista de vídeos.", true); });
+  };
+  function capaDoVideo(arquivo){
+    return new Promise(function(ok){
+      try {
+        var v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto";
+        var u = URL.createObjectURL(arquivo); v.src = u;
+        var fim = function(b){ URL.revokeObjectURL(u); ok(b); };
+        v.addEventListener("loadeddata", function(){ try { v.currentTime = Math.min(0.8, (v.duration || 1) / 2); } catch(e) { fim(null); } });
+        v.addEventListener("seeked", function(){
+          try { var w = 540, h = Math.round(w * (v.videoHeight || 960) / (v.videoWidth || 540)); var c = document.createElement("canvas"); c.width = w; c.height = h;
+            c.getContext("2d").drawImage(v, 0, 0, w, h); c.toBlob(function(b){ fim(b); }, "image/jpeg", 0.8); } catch(e) { fim(null); }
+        });
+        v.addEventListener("error", function(){ fim(null); });
+        setTimeout(function(){ fim(null); }, 8000);
+      } catch(e) { ok(null); }
+    });
+  }
+  var vp = $("pdVidPub");
+  if (vp) vp.addEventListener("click", function(){
+    var f = $("pdVidArq").files && $("pdVidArq").files[0];
+    if (!f) { vidMsg("Escolha o vídeo primeiro.", true); return; }
+    if (f.size > 40 * 1024 * 1024) { vidMsg("Esse vídeo tem " + Math.round(f.size / 1048576) + " MB. O máximo é 40 MB (mais ou menos 1 minuto).", true); return; }
+    var ext = (/\.(mp4|mov|webm|m4v)$/i.exec(f.name) || [, "mp4"])[1].toLowerCase(); if (ext === "mov" || ext === "m4v") ext = "mp4";
+    var id = "v" + Date.now().toString(36), arq = "videos/" + id + "." + ext, pos = "videos/" + id + ".jpg";
+    vp.disabled = true; vidMsg("Enviando o vídeo… pode levar um minuto.");
+    var leg = $("pdVidLeg").value.replace(/\s+/g, " ").trim();
+    f.arrayBuffer().then(function(buf){ return window.ghEnviarArquivo(arq, new Uint8Array(buf), "Vídeo novo: " + (leg || id)); })
+    .then(function(){ return capaDoVideo(f); })
+    .then(function(capa){ return capa ? capa.arrayBuffer().then(function(b){ return window.ghEnviarArquivo(pos, new Uint8Array(b), "Capa do vídeo"); }).then(function(){ return true; }, function(){ return false; }) : false; })
+    .then(function(temCapa){
+      var nova = [{ id: id, arquivo: arq, poster: temCapa ? pos : "", legenda: leg, data: new Date().toISOString().slice(0, 10) }].concat(vidLista);
+      return window.ghVideosSalvarLista(nova).then(function(){ vidLista = nova; });
+    })
+    .then(function(){ $("pdVidArq").value = ""; $("pdVidLeg").value = ""; vidDesenhar(); vidMsg("Publicado ✓ Aparece no site em cerca de 1 minuto."); if (window.adegaVideosRecarregar) setTimeout(window.adegaVideosRecarregar, 60000); },
+          function(){ vidMsg("Não consegui enviar. Confira a internet e tente de novo.", true); })
+    .then(function(){ vp.disabled = false; });
+  });
   // dados da loja
-  var ljCampos = { nome: "ljNome", whatsapp: "ljZap", dono: "ljDono", email: "ljEmail", pixTipo: "ljPixTipo", pixChave: "ljPixChave", pixTitular: "ljPixTitular", pixBanco: "ljPixBanco", pixCidade: "ljPixCidade", razaoSocial: "ljRazao", cnpj: "ljCnpj", endereco: "ljEnd", horario: "ljHorario" };
+  var ljCampos = { nome: "ljNome", whatsapp: "ljZap", dono: "ljDono", email: "ljEmail", pixTipo: "ljPixTipo", pixChave: "ljPixChave", pixTitular: "ljPixTitular", pixBanco: "ljPixBanco", pixCidade: "ljPixCidade", razaoSocial: "ljRazao", cnpj: "ljCnpj", endereco: "ljEnd", horario: "ljHorario", grupo: "ljGrupo" };
   function ljSo(v){ return String(v || "").replace(/\D/g, ""); }
   function ljZapLimpo(v){ var d = ljSo(v); if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2); return d; }
   function ljLinksGmail(){
@@ -3479,6 +3674,8 @@ window.pagamentoEfetuado = function(){
     o.cnpj = ljSo(o.cnpj);
     if (o.cnpj && o.cnpj.length !== 14) { m("O CNPJ tem 14 números. Confira ou deixe em branco.", true); return; }
     if (!o.endereco) { m("Escreva o endereço da adega.", true); return; }
+    o.grupo = o.grupo.replace(/\s/g, "");
+    if (o.grupo && !/^https:\/\/(chat\.whatsapp\.com|whatsapp\.com\/channel|www\.whatsapp\.com\/channel)\/[A-Za-z0-9_-]+/.test(o.grupo)) { m("O link do grupo precisa começar com https://chat.whatsapp.com/ (pegue em Dados do grupo > Convidar via link).", true); return; }
     if (!o.pixTitular) { m("Escreva o nome de quem recebe o Pix.", true); return; }
     if (!o.pixCidade) { m("Escreva a cidade de quem recebe o Pix.", true); return; }
     o.atualizado = new Date().toISOString();

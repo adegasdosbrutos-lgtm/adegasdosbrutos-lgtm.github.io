@@ -1,0 +1,72 @@
+[
+ {
+  "id": "v01",
+  "arquivo": "videos/v01.mp4",
+  "poster": "videos/v01.jpg",
+  "legenda": "Nossa adega",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v02",
+  "arquivo": "videos/v02.mp4",
+  "poster": "videos/v02.jpg",
+  "legenda": "Inauguração da Adega dos Brutos",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v03",
+  "arquivo": "videos/v03.mp4",
+  "poster": "videos/v03.jpg",
+  "legenda": "O que tem lá",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v04",
+  "arquivo": "videos/v04.mp4",
+  "poster": "videos/v04.jpg",
+  "legenda": "Nossa fachada",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v05",
+  "arquivo": "videos/v05.mp4",
+  "poster": "videos/v05.jpg",
+  "legenda": "A equipe",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v06",
+  "arquivo": "videos/v06.mp4",
+  "poster": "videos/v06.jpg",
+  "legenda": "Convite",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v07",
+  "arquivo": "videos/v07.mp4",
+  "poster": "videos/v07.jpg",
+  "legenda": "A festa",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v08",
+  "arquivo": "videos/v08.mp4",
+  "poster": "videos/v08.jpg",
+  "legenda": "Os Brutos",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v09",
+  "arquivo": "videos/v09.mp4",
+  "poster": "videos/v09.jpg",
+  "legenda": "Anota a data",
+  "data": "2026-11-20"
+ },
+ {
+  "id": "v10",
+  "arquivo": "videos/v10.mp4",
+  "poster": "videos/v10.jpg",
+  "legenda": "Vamos colar!",
+  "data": "2026-11-20"
+ }
+]
