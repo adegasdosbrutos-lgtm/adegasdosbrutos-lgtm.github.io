@@ -1,11 +1,36 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}#editWrap,#esgAbrirBtn,#bibliotecaWrap,#importWrap,#pedidosWrap{display:none!important}
+
+/* ---- rodapé, venda responsável e aviso de 18 anos ---- */
+.rodape{max-width:1100px;margin:28px auto 0;padding:18px 16px 26px;border-top:1px solid rgba(242,184,58,.35);color:#d8cdb6;font-size:13px;line-height:1.55;text-align:center;display:grid;gap:10px}
+.rodape b{color:#f2b83a}
+.rd-aviso{margin:0}
+.rd-dados{display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:center}
+.rd-dados [hidden]{display:none}
+.rd-link{justify-self:center;background:none;border:1px solid rgba(242,184,58,.6);color:#f2b83a;border-radius:999px;padding:7px 14px;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer}
+.rd-ano{margin:0;font-size:12px;color:#9c917c}
+.ck-18{border-left:3px solid #f2b83a;padding-left:10px}
+#vendaResp{max-width:560px;width:calc(100% - 32px);border:1px solid rgba(242,184,58,.5);border-radius:16px;background:#120d08;color:#efe6d4;padding:20px 20px 16px;line-height:1.55;font-size:14px}
+#vendaResp::backdrop{background:rgba(0,0,0,.7)}
+#vendaResp h2{margin:0 0 10px;color:#f2b83a;font-size:19px}
+#vendaResp ul{margin:0 0 14px;padding-left:18px;display:grid;gap:8px}
+.idade{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;background:rgba(8,6,4,.94);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.idade[hidden]{display:none}
+.idade .cx{max-width:420px;width:100%;text-align:center;background:#120d08;border:1px solid rgba(242,184,58,.55);border-radius:18px;padding:26px 20px;color:#efe6d4;display:grid;gap:12px}
+.idade h2{margin:0;color:#f2b83a;font-size:24px}
+.idade p{margin:0;font-size:15px;line-height:1.5}
+.idade .sim,.idade .nao,#vendaResp .ok{border:0;border-radius:12px;padding:13px 16px;font-weight:700;font-size:15px;font-family:inherit;cursor:pointer}
+.idade .sim,#vendaResp .ok{background:#f2b83a;color:#120d08}
+.idade .nao{background:transparent;color:#efe6d4;border:1px solid rgba(239,230,212,.35)}
 </style></head><body>
 <script>
 // ===== Dados da loja: nome, WhatsApp e Pix =====
 // Ficam em loja.json, no projeto do site. O dono muda pelo painel (aba Configurar > Dados da loja).
 (function(){
   var PADRAO = { nome: "Adega dos Brutos", whatsapp: "11926190514", pixTipo: "celular", pixChave: "11926190514",
-    pixTitular: "Walter Henrique de Lima Júnior", pixBanco: "PicPay", pixCidade: "Embu das Artes", dono: "", email: "" };
+    pixTitular: "Walter Henrique de Lima Júnior", pixBanco: "PicPay", pixCidade: "Embu das Artes", dono: "", email: "",
+    endereco: "Rua dos Coqueiros, 325 · Jardim Pinheirinho · Embu das Artes - SP", horario: "", razaoSocial: "", cnpj: "" };
+  var PODE_VAZIO = { dono: 1, email: 1, horario: 1, razaoSocial: 1, cnpj: 1 };
+  function cnpjFmt(c){ c = so(c); return c.length === 14 ? c.slice(0, 2) + "." + c.slice(2, 5) + "." + c.slice(5, 8) + "/" + c.slice(8, 12) + "-" + c.slice(12) : c; }
   window.LOJA = Object.assign({}, PADRAO);
   function so(d){ return String(d || "").replace(/\D/g, ""); }
   window.lojaSoNumeros = so;
@@ -19,8 +44,9 @@
     var L = window.LOJA;
     document.querySelectorAll("[data-loja]").forEach(function(el){
       var k = el.getAttribute("data-loja");
-      el.textContent = k === "whatsapp" ? window.lojaZapFmt(L.whatsapp) : (L[k] || "");
+      el.textContent = k === "whatsapp" ? window.lojaZapFmt(L.whatsapp) : k === "cnpjFmt" ? cnpjFmt(L.cnpj) : (L[k] || "");
     });
+    document.querySelectorAll("[data-loja-se]").forEach(function(el){ el.hidden = !L[el.getAttribute("data-loja-se")]; });
     document.title = L.nome;
     var h = document.getElementById("titulo"); if (h) h.setAttribute("aria-label", L.nome);
   }
@@ -29,7 +55,7 @@
     Object.keys(PADRAO).forEach(function(k){
       if (o[k] == null) return;
       var v = String(o[k]).trim();
-      if (v || k === "dono" || k === "email") window.LOJA[k] = v;
+      if (v || PODE_VAZIO[k]) window.LOJA[k] = v;
     });
     pintar();
     try { window.dispatchEvent(new CustomEvent("adega-loja")); } catch(e) {}
@@ -124,11 +150,14 @@
 
   // ---------- carregar ----------
   async function carregarPublico(){
-    try { var r = await fetch("produtos.json?t=" + Date.now(), { cache: "no-store" }); PROD = await r.json(); } catch(e) { PROD = []; }
+    try { var r = await fetch("produtos.json?t=" + Date.now(), { cache: "no-store" }); PROD = (await r.json()).filter(function(x){ return x.categoria !== "Cigarros e acessórios"; }); } catch(e) { PROD = []; }
     avisar("itens");
   }
   async function carregarDono(){
-    var p = await lerJSON(SITE, "produtos.json"); if (p) { PROD = p; avisar("itens"); }
+    var p = await lerJSON(SITE, "produtos.json"); if (p) PROD = p;
+    // itens só de balcão (tabaco): ficam no projeto privado, só o dono vê
+    try { var bal = await lerJSON(DADOS, "produtos-balcao.json"); if (bal) PROD = (PROD || []).concat(bal.map(function(x){ x.balcao = true; return x; })); } catch(e) {}
+    avisar("itens");
     try { var lj = await lerJSON(SITE, "loja.json"); if (lj && window.adegaAplicaLoja) window.adegaAplicaLoja(lj); } catch(e) {}
     CUST = (await lerJSON(DADOS, "custos.json")) || {}; avisar("custos");
     var pasta = await api("GET", DADOS, "movimentos"); MOVS = {};
@@ -201,7 +230,10 @@
           if (nome !== "itens" || !token) throw new Error("sem acesso");
           var it = PROD.filter(function(x){ return x.id === id; })[0]; if (!it) throw new Error("não achei");
           var antes = Object.assign({}, it); Object.assign(it, patch); avisar("itens");
-          try { await gravarJSON(SITE, "produtos.json", PROD, "Produto alterado: " + it.nome); } catch(e) { Object.keys(it).forEach(function(k){ delete it[k]; }); Object.assign(it, antes); avisar("itens"); throw e; }
+          try {
+            if (it.balcao) await gravarJSON(DADOS, "produtos-balcao.json", PROD.filter(function(x){ return x.balcao; }), "Item de balcão alterado: " + it.nome);
+            else await gravarJSON(SITE, "produtos.json", PROD.filter(function(x){ return !x.balcao; }), "Produto alterado: " + it.nome);
+          } catch(e) { Object.keys(it).forEach(function(k){ delete it[k]; }); Object.assign(it, antes); avisar("itens"); throw e; }
         },
         set: async function(d){
           if (nome !== "custos" || !token) throw new Error("sem acesso");
@@ -235,9 +267,9 @@
 })();
 </script>
 
-<meta name="description" content="Adega dos Brutos · Rua dos Coqueiros, 325 · Jardim Pinheirinho · Embu das Artes. Bebidas geladas, narguilé e pedido pelo WhatsApp.">
+<meta name="description" content="Adega dos Brutos · Rua dos Coqueiros, 325 · Jardim Pinheirinho · Embu das Artes. Bebidas geladas e pedido pelo WhatsApp.">
 <meta property="og:title" content="Adega dos Brutos">
-<meta property="og:description" content="Bebidas geladas, narguilé e pedido pelo WhatsApp. Rua dos Coqueiros, 325 · Embu das Artes.">
+<meta property="og:description" content="Bebidas geladas e pedido pelo WhatsApp. Rua dos Coqueiros, 325 · Embu das Artes.">
 <title>Adega dos Brutos</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;700&family=Dancing+Script:wght@700&family=JetBrains+Mono:wght@400;600;800&display=swap">
 <style>
@@ -852,7 +884,7 @@ window.pagamentoEfetuado = function(){
   setTimeout(function(){ ov.remove(); }, 4000);
 };
 </script>
-    <p class="sub">Bebidas geladas · Variedade extensa · Narguilé &amp; fumaça</p>
+    <p class="sub">Bebidas geladas · Variedade extensa · Pedido pelo WhatsApp</p>
     <div class="scan" aria-hidden="true"></div>
     
   </header>
@@ -947,12 +979,6 @@ window.pagamentoEfetuado = function(){
   <div class="cart-par">
   <section id="carrinho" class="group cart" aria-labelledby="cartTitle">
     <h2 id="cartTitle">Seu carrinho</h2>
-    <div class="cig-rapido">
-      <label for="cigQ" class="cig-rot">Quer cigarro? Escreva o nome (ex.: Marlboro vermelho)</label>
-      <input id="cigQ" class="search" type="search" autocomplete="off" placeholder="Nome do cigarro" aria-describedby="cigAviso">
-      <p id="cigAviso" class="cart-note" role="status" aria-live="polite"></p>
-      <ul id="cigSug" class="cig-sug"></ul>
-    </div>
     <p id="cartEmpty" class="cart-empty">Nenhum item ainda. Toque em “Adicionar ao carrinho” em qualquer bebida.</p>
     <ul id="cartList" class="cart-list"></ul>
     <div id="cartFoot" class="cart-foot" hidden>
@@ -1025,6 +1051,7 @@ window.pagamentoEfetuado = function(){
         <summary>Ver texto do pedido</summary>
         <textarea id="pedidoTxt" readonly rows="10"></textarea>
       </details>
+      <p class="ck-note ck-18"><b>Venda de bebidas alcoólicas proibida para menores de 18 anos.</b> Na entrega pedimos documento oficial com foto. Se beber, não dirija.</p>
       <p class="ck-note">O pedido abre direto no WhatsApp da adega. Pague pelo Pix com o número que aparece no pedido e, depois, encaminhe a mensagem e o comprovante do pagamento para a Adega no WhatsApp <b data-loja="whatsapp">+55 11 92619-0514</b>. Se o WhatsApp não abrir, toque em Copiar pedido e cole na conversa com a adega.</p>
     </form>
   </section>
@@ -1307,7 +1334,12 @@ window.pagamentoEfetuado = function(){
             <label>WhatsApp da adega (com DDD)<input id="ljZap" inputmode="tel" placeholder="(11) 99999-9999" autocomplete="off"></label>
             <label>Nome do dono<input id="ljDono" maxlength="60" autocomplete="off"></label>
             <label>E-mail da adega (Gmail)<input id="ljEmail" type="email" placeholder="nome@gmail.com" autocomplete="off"></label>
+            <label>Razão social (opcional)<input id="ljRazao" maxlength="80" autocomplete="off"></label>
+            <label>CNPJ (opcional)<input id="ljCnpj" inputmode="numeric" placeholder="00.000.000/0000-00" autocomplete="off"></label>
+            <label>Endereço<input id="ljEnd" maxlength="120" autocomplete="off"></label>
+            <label>Horário de funcionamento<input id="ljHorario" maxlength="80" placeholder="Ex.: Seg a Sáb, 10h às 23h" autocomplete="off"></label>
           </div>
+          <p class="exp">Razão social, CNPJ, endereço e horário aparecem no rodapé do site. Campo vazio não aparece.</p>
           <h3 style="margin-top:6px">Pix</h3>
           <label style="display:flex;gap:8px;align-items:center;font-size:14px;color:var(--txt)"><input id="ljPixIgual" type="checkbox" style="width:auto"> A chave Pix é o mesmo número do WhatsApp</label>
           <div class="pd-campos">
@@ -1408,15 +1440,65 @@ window.pagamentoEfetuado = function(){
   </div>
 </section>
 
-  <p class="foot"><span data-loja="nome">Adega dos Brutos</span> · 2026</p>
+  <footer class="rodape">
+    <p class="rd-aviso"><b>Venda e entrega de bebidas alcoólicas proibidas para menores de 18 anos</b> (ECA, art. 81). Na entrega pedimos documento oficial com foto. Se beber, não dirija.</p>
+    <p class="rd-aviso">Artigos de tabacaria não são vendidos pelo site: somente no balcão da loja, para maiores de 18 anos.</p>
+    <div class="rd-dados">
+      <b data-loja="nome">Adega dos Brutos</b>
+      <span data-loja-se="razaoSocial" hidden><span data-loja="razaoSocial"></span></span>
+      <span data-loja-se="cnpj" hidden>CNPJ <span data-loja="cnpjFmt"></span></span>
+      <span data-loja="endereco">Rua dos Coqueiros, 325 · Jardim Pinheirinho · Embu das Artes - SP</span>
+      <span>WhatsApp <span data-loja="whatsapp">+55 11 99123-9748</span></span>
+      <span data-loja-se="horario" hidden>Horário: <span data-loja="horario"></span></span>
+    </div>
+    <button type="button" class="rd-link" id="vrAbrir">Venda responsável e privacidade</button>
+    <p class="rd-ano">© 2026 <span data-loja="nome">Adega dos Brutos</span></p>
+  </footer>
+  <dialog id="vendaResp" aria-labelledby="vrTitulo">
+    <h2 id="vrTitulo">Venda responsável e privacidade</h2>
+    <ul>
+      <li><b>Bebida alcoólica só para maiores de 18 anos.</b> Na entrega pedimos documento oficial com foto. Sem documento, a bebida alcoólica não é entregue (Estatuto da Criança e do Adolescente, Lei nº 8.069/1990).</li>
+      <li><b>Não vendemos cigarro, charuto, vape nem outros produtos de tabaco pelo site.</b> Esses itens são vendidos só no balcão da loja, para maiores de 18 anos, como manda a Lei nº 9.294/1996.</li>
+      <li><b>Seus dados:</b> o site não guarda seu nome, telefone nem endereço. O pedido vai direto para o nosso WhatsApp, e usamos esses dados só para entregar e falar com você sobre o pedido.</li>
+      <li>Dúvidas: WhatsApp <span data-loja="whatsapp">+55 11 99123-9748</span>.</li>
+    </ul>
+    <form method="dialog"><button class="ok">Entendi</button></form>
+  </dialog>
+  <div id="idade" class="idade" hidden role="dialog" aria-modal="true" aria-labelledby="idTitulo">
+    <div class="cx">
+      <h2 id="idTitulo" data-loja="nome">Adega dos Brutos</h2>
+      <p id="idTexto">Este site vende bebidas alcoólicas. Você tem 18 anos ou mais?</p>
+      <button type="button" class="sim" id="idSim">Sim, tenho 18 anos ou mais</button>
+      <button type="button" class="nao" id="idNao">Não</button>
+    </div>
+  </div>
+  <script>
+  (function(){
+    var $ = function(id){ return document.getElementById(id); };
+    var ab = $("vrAbrir"), dl = $("vendaResp");
+    if (ab && dl) ab.addEventListener("click", function(){ if (dl.showModal) dl.showModal(); else dl.setAttribute("open", ""); });
+    var dono = false, ok = false;
+    try { dono = /#dono/.test(location.hash) || localStorage.getItem("adega-dono") === "1"; ok = localStorage.getItem("adega-18") === "1"; } catch(e) { dono = /#dono/.test(location.hash); }
+    if (dono || ok) return;
+    var box = $("idade"); box.hidden = false; document.documentElement.style.overflow = "hidden";
+    $("idSim").addEventListener("click", function(){
+      try { localStorage.setItem("adega-18", "1"); } catch(e) {}
+      box.hidden = true; document.documentElement.style.overflow = "";
+    });
+    $("idNao").addEventListener("click", function(){
+      $("idTexto").textContent = "Este site é só para maiores de 18 anos. Volte quando tiver 18 anos.";
+      $("idSim").hidden = true; $("idNao").hidden = true;
+    });
+  })();
+  </script>
   <span class="beijo-canto" aria-hidden="true">💋</span>
 </div>
 
 <script>
 (function(){
-  var CATS = ["Whiskies","Destilados","Cachaças e vinhos","Energéticos","Cervejas","Bebidas mistas","Refrigerantes e sucos","Doces e salgadinhos","Cigarros e acessórios","Isqueiros","Sedas e papel","Descartáveis","Chope"];
+  var CATS = ["Whiskies","Destilados","Cachaças e vinhos","Energéticos","Cervejas","Bebidas mistas","Refrigerantes e sucos","Doces e salgadinhos","Isqueiros","Sedas e papel","Descartáveis","Chope"];
   var state = { items: [], cat: null, q: "", edit: false, canEdit: false, loaded: false, marca: null };
-  var CIG = "Cigarros e acessórios";
+  var CIG = "Cigarros e acessórios"; // só balcão: nunca aparece na vitrine
   // Classifica o cigarro pela marca que aparece no nome (a primeira que bater vence).
   var MARCAS = [
     ["Marlboro", /marlboro/i], ["Camel", /camel/i], ["Lucky Strike", /lucky/i], ["Kent", /\bkent\b/i],
@@ -2498,83 +2580,11 @@ window.pagamentoEfetuado = function(){
     else if (!state.edit) setStatus("");
   }
 
-  // Pedir cigarro escrevendo o nome: acha no catálogo e põe no carrinho com o preço.
-  // Entende cor em português (vermelho = red, azul = blue...) e erro de acento.
-  var CIG_SINONIMOS = {
-    vermelho: ["red", "vermelha", "vermelho"], vermelha: ["red", "vermelha", "vermelho"], red: ["vermelho", "vermelha", "red"],
-    azul: ["blue", "azul"], blue: ["azul", "blue"], prata: ["silver", "prata"], silver: ["prata", "silver"],
-    dourado: ["gold", "dourado"], gold: ["dourado", "gold"], menta: ["mint", "menta", "menthol", "ice"], mint: ["menta", "mint"],
-    roxo: ["purple", "roxo"], purple: ["roxo", "purple"], verde: ["green", "verde"], cravo: ["kretek", "cravo"],
-    lm: ["l&m", "lm"], "l&m": ["lm", "l&m"], malboro: ["marlboro"], marlboro: ["marlboro"]
-  };
-  function semAcento(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
-  function palavras(s){ return semAcento(s).replace(/[^a-z0-9&]+/g, " ").trim().split(" ").filter(Boolean); }
-  function cigAcha(texto){
-    var ps = palavras(texto);
-    if (!ps.length) return [];
-    var lista = state.items.filter(function(i){ return i.categoria === CIG && !i.esgotado; });
-    return lista.map(function(it){
-      var nome = " " + palavras(it.nome).join(" ") + " ";
-      var pontos = 0;
-      ps.forEach(function(p){
-        var alts = CIG_SINONIMOS[p] || [p];
-        if (alts.some(function(a){ return nome.indexOf(" " + a) >= 0; })) pontos++;
-      });
-      return { it: it, pontos: pontos };
-    }).filter(function(x){ return x.pontos > 0; }).sort(function(a, b){
-      return b.pontos - a.pontos || (a.it.preco == null) - (b.it.preco == null) || String(a.it.nome).length - String(b.it.nome).length;
-    }).filter(function(x, _, arr){ return x.pontos === arr[0].pontos; }).slice(0, 6).map(function(x){ return x.it; });
-  }
-  function cigDesenha(){
-    var ul = $("cigSug"), q = $("cigQ").value;
-    ul.textContent = "";
-    // Só abre a lista com o código 1234 (pode ser "1 2 3 4"). Nome de cigarro não mostra nada.
-    var codigoCerto = q.replace(/\D/g, "") === "1234" && !/[a-z]/i.test(q);
-    if (!codigoCerto) { $("cigAviso").textContent = ""; return; }
-    var achados = state.items.filter(function(i){ return i.categoria === CIG && !i.esgotado; })
-      .sort(function(a, b){ return String(a.nome).localeCompare(String(b.nome), "pt-BR"); });
-    $("cigAviso").textContent = achados.length ? achados.length + " cigarros. Toque em Adicionar no que você quer:" : "Nenhum cigarro disponível agora.";
-    achados.forEach(function(it){
-      var li = document.createElement("li");
-      var img = document.createElement("img");
-      img.alt = "";
-      if (it.fotoId) img.src = "fotos/" + it.fotoId; else if (it.fotoDados) img.src = it.fotoDados;
-      var n = document.createElement("span");
-      n.className = "cn";
-      n.textContent = it.nome || "";
-      var p = document.createElement("span");
-      var f = fmt(it.preco);
-      p.className = "cp" + (f ? "" : " sc");
-      p.textContent = f || "preço a confirmar";
-      n.appendChild(document.createElement("br"));
-      n.appendChild(p);
-      var b = document.createElement("button");
-      b.type = "button";
-      b.className = "btn";
-      b.textContent = "Adicionar";
-      b.setAttribute("aria-label", "Adicionar " + (it.nome || "") + " ao carrinho");
-      b.addEventListener("click", function(){
-        addToCart(it.id);
-        b.textContent = "Adicionado ✓";
-        $("cigAviso").textContent = (it.nome || "") + " foi para o carrinho.";
-        setTimeout(function(){ b.textContent = "Adicionar"; }, 1300);
-      });
-      li.appendChild(img);
-      li.appendChild(n);
-      li.appendChild(b);
-      ul.appendChild(li);
-    });
-  }
-  function bindCigRapido(){
-    $("cigQ").addEventListener("input", cigDesenha);
-    $("cigQ").addEventListener("keydown", function(e){ if (e.key === "Enter") e.preventDefault(); });
-  }
 
   function bindControls(){
     buildBancos();
     bindPedido();
     $("q").addEventListener("input", function(e){ state.q = e.target.value; render(); });
-    bindCigRapido();
     function buscarAgora(){
       if (!$("q").value.trim()) { setStatus("Digite o nome do item ou da categoria."); $("q").focus(); return; }
       state.q = $("q").value;
@@ -2896,7 +2906,7 @@ window.pagamentoEfetuado = function(){
     db.collection("itens").orderBy("ordem").onSnapshot(function(snap){
       state.items = snap.docs.filter(function(d){ return d.exists; }).map(function(d){
         return Object.assign({ id: d.id }, d.data());
-      });
+      }).filter(function(i){ return !i.balcao && i.categoria !== CIG; });
       state.loaded = true;
       render();
     }, function(){
@@ -3331,7 +3341,7 @@ window.pagamentoEfetuado = function(){
 // Guia em áudio (arquivos mp3 do próprio site) + primeira configuração + troca de senha
 (function(){
   var $ = function(id){ return document.getElementById(id); };
-  var PARTES = [{"t": "O site que o cliente vê", "x": "Parte um. O site que o cliente vê. Lá em cima tem o nome da adega e, logo abaixo, a busca. O cliente pode escrever o nome da bebida e apertar Buscar, ou tocar numa categoria, como Cervejas, Whiskies ou Energéticos. Em cada produto aparece a foto, o preço e o botão Adicionar ao carrinho. Produto esgotado aparece riscado em vermelho e não dá para comprar. Os cigarros ficam escondidos na caixa do carrinho: a lista só aparece quando a pessoa digita um, dois, três, quatro. Se escrever o nome do cigarro, não aparece nada, de propósito. No carrinho dá para aumentar, diminuir ou tirar itens, e o total soma sozinho.", "d": "48 s"}, {"t": "Como o cliente paga", "x": "Parte dois. Como o cliente paga. No carrinho, o cliente aperta Pagar. Aí ele escreve o nome e o sobrenome, marca se quer entrega a domicílio, que custa sete reais, e escolhe o banco que usa para o Pix. Embaixo aparece o resumo com o total. Quando ele aperta Pagar com Pix pelo WhatsApp, o WhatsApp da adega abre com o pedido já escrito: os itens, o total e a chave Pix. Ele paga e manda o comprovante na mesma conversa. Se o WhatsApp não abrir, tem o botão Copiar pedido, para colar na conversa.", "d": "39 s"}, {"t": "Como o dono entra", "x": "Parte três. Como o dono entra. O cliente não vê nenhum botão do dono. Para entrar, abra o endereço do site com cerquilha dono no final, assim: adegasdosbrutos traço l g t m ponto github ponto io, barra, cerquilha, dono. Salve esse endereço nos favoritos do celular. Aí aparece o botão Modificar, com a engrenagem, do lado da busca. Toque nele e digite a senha. Lá dentro, as partes ficam em abas: Mapa, Produtos, Lançar, Estoque, Fechamento, Exportar, Configurar e este guia. Comece pelo Mapa. Para sair, aperte Voltar ao site.", "d": "46 s"}, {"t": "Mudar nome, preço e foto", "x": "Parte quatro. Mudar nome, preço e foto. No painel, abra a aba Produtos. Procure o produto pelo nome ou pela categoria e toque em Modificar. Aparece a ficha dele. Ali você troca o nome, o preço de venda e o custo de atacado, que é quanto você paga no fornecedor. O painel já mostra o lucro por unidade e a margem. Para trocar a foto, toque em Trocar a foto e escolha uma do celular. Também dá para marcar Esgotado, colocar o estoque inicial, que é quanto tem hoje, e o estoque mínimo. Aperte Salvar mudanças. Em mais ou menos um minuto o site dos clientes já mostra o novo.", "d": "45 s"}, {"t": "Lançar entrada, venda e perda", "x": "Parte cinco. Lançar o que entra e o que sai. Abra a aba Lançar. Primeiro escolha o tipo. Entrada é quando chega mercadoria do fornecedor. Venda é quando vendeu. Perda é quando quebrou, venceu ou sumiu. Depois escreva o nome do produto e escolha na lista. Coloque a quantidade. O valor por unidade já vem preenchido: na entrada vem o custo, na venda vem o preço. Se foi diferente, troque. Confira a data e aperte Salvar lançamento. Embaixo ficam os últimos lançamentos. Se lançou errado, toque em Apagar duas vezes.", "d": "44 s"}, {"t": "Ver o estoque", "x": "Parte seis. Ver o estoque. Na aba Estoque, o saldo de cada produto se calcula sozinho: o estoque inicial, mais as entradas, menos as vendas, menos as perdas. Quando o saldo chega no mínimo, aparece Repor em amarelo. Quando acaba, aparece Zerado em vermelho. Lá em cima ficam os totais: quantas unidades tem, quanto dinheiro está parado no estoque pelo custo, quanto daria se vendesse tudo e o lucro esperado. Use o filtro Só repor para montar a lista de compra do fornecedor.", "d": "36 s"}, {"t": "Fechamento do dia, semana, mês e ano", "x": "Parte sete. O fechamento. Abra a aba Fechamento e escolha Dia, Semana, Mês ou Ano. Use as setas para voltar ou avançar, e o botão Hoje para voltar ao período atual. Os quadros mostram o faturamento, o lucro, o lucro depois das perdas, as unidades vendidas, o valor médio de cada venda, as perdas, as compras e a margem. Embaixo de cada número aparece uma seta: verde quando subiu e vermelha quando caiu, comparando com o período anterior do mesmo tamanho. Depois vêm os gráficos: o faturamento e o lucro ao longo do período, a porcentagem de cada categoria e as dez bebidas que mais vendem.", "d": "44 s"}, {"t": "Exportar, senha e segurança", "x": "Parte oito. Exportar e cuidar da senha. Na aba Exportar você baixa tudo numa planilha de Excel, com o fechamento, os produtos e os lançamentos. Bom para guardar ou mandar para o contador. Na aba Configurar dá para trocar a senha do painel: digite a senha nova duas vezes e salve. As vendas e os custos ficam guardados num lugar privado, que só o dono vê. Os produtos e os preços ficam no próprio site. Dica importante: quem compra a adega deve trocar a senha do Gmail da adega, a senha do GitHub e a senha deste painel. Assim tudo fica só com o novo dono.", "d": "42 s"}];
+  var PARTES = [{"t": "O site que o cliente vê", "x": "Parte um. O site que o cliente vê. Lá em cima tem o nome da adega e, logo abaixo, a busca. O cliente pode escrever o nome da bebida e apertar Buscar, ou tocar numa categoria, como Cervejas, Whiskies ou Energéticos. Em cada produto aparece a foto, o preço e o botão Adicionar ao carrinho. Produto esgotado aparece riscado em vermelho e não dá para comprar. Na primeira vez, o site pergunta se a pessoa tem dezoito anos ou mais. Cigarro e outros produtos de tabaco não aparecem no site: são vendidos só no balcão da loja. No carrinho dá para aumentar, diminuir ou tirar itens, e o total soma sozinho.", "d": "44 s"}, {"t": "Como o cliente paga", "x": "Parte dois. Como o cliente paga. No carrinho, o cliente aperta Pagar. Aí ele escreve o nome e o sobrenome, marca se quer entrega a domicílio, que custa sete reais, e escolhe o banco que usa para o Pix. Embaixo aparece o resumo com o total. Quando ele aperta Pagar com Pix pelo WhatsApp, o WhatsApp da adega abre com o pedido já escrito: os itens, o total e a chave Pix. Ele paga e manda o comprovante na mesma conversa. Se o WhatsApp não abrir, tem o botão Copiar pedido, para colar na conversa.", "d": "39 s"}, {"t": "Como o dono entra", "x": "Parte três. Como o dono entra. O cliente não vê nenhum botão do dono. Para entrar, abra o endereço do site com cerquilha dono no final, assim: adegasdosbrutos traço l g t m ponto github ponto io, barra, cerquilha, dono. Salve esse endereço nos favoritos do celular. Aí aparece o botão Modificar, com a engrenagem, do lado da busca. Toque nele e digite a senha. Lá dentro, as partes ficam em abas: Mapa, Produtos, Lançar, Estoque, Fechamento, Exportar, Configurar e este guia. Comece pelo Mapa. Para sair, aperte Voltar ao site.", "d": "46 s"}, {"t": "Mudar nome, preço e foto", "x": "Parte quatro. Mudar nome, preço e foto. No painel, abra a aba Produtos. Procure o produto pelo nome ou pela categoria e toque em Modificar. Aparece a ficha dele. Ali você troca o nome, o preço de venda e o custo de atacado, que é quanto você paga no fornecedor. O painel já mostra o lucro por unidade e a margem. Para trocar a foto, toque em Trocar a foto e escolha uma do celular. Também dá para marcar Esgotado, colocar o estoque inicial, que é quanto tem hoje, e o estoque mínimo. Aperte Salvar mudanças. Em mais ou menos um minuto o site dos clientes já mostra o novo.", "d": "45 s"}, {"t": "Lançar entrada, venda e perda", "x": "Parte cinco. Lançar o que entra e o que sai. Abra a aba Lançar. Primeiro escolha o tipo. Entrada é quando chega mercadoria do fornecedor. Venda é quando vendeu. Perda é quando quebrou, venceu ou sumiu. Depois escreva o nome do produto e escolha na lista. Coloque a quantidade. O valor por unidade já vem preenchido: na entrada vem o custo, na venda vem o preço. Se foi diferente, troque. Confira a data e aperte Salvar lançamento. Embaixo ficam os últimos lançamentos. Se lançou errado, toque em Apagar duas vezes.", "d": "44 s"}, {"t": "Ver o estoque", "x": "Parte seis. Ver o estoque. Na aba Estoque, o saldo de cada produto se calcula sozinho: o estoque inicial, mais as entradas, menos as vendas, menos as perdas. Quando o saldo chega no mínimo, aparece Repor em amarelo. Quando acaba, aparece Zerado em vermelho. Lá em cima ficam os totais: quantas unidades tem, quanto dinheiro está parado no estoque pelo custo, quanto daria se vendesse tudo e o lucro esperado. Use o filtro Só repor para montar a lista de compra do fornecedor.", "d": "36 s"}, {"t": "Fechamento do dia, semana, mês e ano", "x": "Parte sete. O fechamento. Abra a aba Fechamento e escolha Dia, Semana, Mês ou Ano. Use as setas para voltar ou avançar, e o botão Hoje para voltar ao período atual. Os quadros mostram o faturamento, o lucro, o lucro depois das perdas, as unidades vendidas, o valor médio de cada venda, as perdas, as compras e a margem. Embaixo de cada número aparece uma seta: verde quando subiu e vermelha quando caiu, comparando com o período anterior do mesmo tamanho. Depois vêm os gráficos: o faturamento e o lucro ao longo do período, a porcentagem de cada categoria e as dez bebidas que mais vendem.", "d": "44 s"}, {"t": "Exportar, senha e segurança", "x": "Parte oito. Exportar e cuidar da senha. Na aba Exportar você baixa tudo numa planilha de Excel, com o fechamento, os produtos e os lançamentos. Bom para guardar ou mandar para o contador. Na aba Configurar dá para trocar a senha do painel: digite a senha nova duas vezes e salve. As vendas e os custos ficam guardados num lugar privado, que só o dono vê. Os produtos e os preços ficam no próprio site. Dica importante: quem compra a adega deve trocar a senha do Gmail da adega, a senha do GitHub e a senha deste painel. Assim tudo fica só com o novo dono.", "d": "42 s"}];
   var lista = $("gaPartes");
   lista.innerHTML = PARTES.map(function(p, i){
     return '<div class="ga-parte" data-i="' + i + '"><div class="ga-cab"><span class="ga-num">' + String(i + 1).padStart(2, "0") + '</span><h3>' + p.t + '</h3><small>' + p.d + '</small><button class="ga-ouvir" type="button" data-ouvir="' + i + '" aria-pressed="false">▶ Ouvir</button></div><button class="ga-ler" type="button" data-ler="' + i + '">Ler o texto</button><p class="ga-texto">' + p.x + '</p></div>';
@@ -3380,7 +3390,7 @@ window.pagamentoEfetuado = function(){
     }, function(e){ m(e && e.message ? e.message : "Não deu certo. Tente de novo.", true); }).then(function(){ cfg.disabled = false; });
   });
   // dados da loja
-  var ljCampos = { nome: "ljNome", whatsapp: "ljZap", dono: "ljDono", email: "ljEmail", pixTipo: "ljPixTipo", pixChave: "ljPixChave", pixTitular: "ljPixTitular", pixBanco: "ljPixBanco", pixCidade: "ljPixCidade" };
+  var ljCampos = { nome: "ljNome", whatsapp: "ljZap", dono: "ljDono", email: "ljEmail", pixTipo: "ljPixTipo", pixChave: "ljPixChave", pixTitular: "ljPixTitular", pixBanco: "ljPixBanco", pixCidade: "ljPixCidade", razaoSocial: "ljRazao", cnpj: "ljCnpj", endereco: "ljEnd", horario: "ljHorario" };
   function ljSo(v){ return String(v || "").replace(/\D/g, ""); }
   function ljZapLimpo(v){ var d = ljSo(v); if (d.length > 11 && d.indexOf("55") === 0) d = d.slice(2); return d; }
   function ljLinksGmail(){
@@ -3427,6 +3437,9 @@ window.pagamentoEfetuado = function(){
     else if (o.pixTipo === "cpf") { o.pixChave = ljSo(o.pixChave); if (o.pixChave.length !== 11 && o.pixChave.length !== 14) { m("CPF tem 11 números e CNPJ tem 14.", true); return; } }
     else if (o.pixTipo === "email") { if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(o.pixChave)) { m("A chave Pix de e-mail parece errada.", true); return; } }
     else { o.pixChave = o.pixChave.replace(/\s/g, ""); if (o.pixChave.length < 32) { m("A chave aleatória tem 32 letras e números (com tracinhos, 36).", true); return; } }
+    o.cnpj = ljSo(o.cnpj);
+    if (o.cnpj && o.cnpj.length !== 14) { m("O CNPJ tem 14 números. Confira ou deixe em branco.", true); return; }
+    if (!o.endereco) { m("Escreva o endereço da adega.", true); return; }
     if (!o.pixTitular) { m("Escreva o nome de quem recebe o Pix.", true); return; }
     if (!o.pixCidade) { m("Escreva a cidade de quem recebe o Pix.", true); return; }
     o.atualizado = new Date().toISOString();
