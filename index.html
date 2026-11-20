@@ -1534,7 +1534,7 @@ window.pagamentoEfetuado = function(){
 
 <script>
 (function(){
-  var CATS = ["Whiskies","Destilados","Cachaças e vinhos","Energéticos","Cervejas","Bebidas mistas","Refrigerantes e sucos","Doces e salgadinhos","Isqueiros","Sedas e papel","Descartáveis","Chope"];
+  var CATS = ["Copão e drinks","Whiskies","Destilados","Cachaças e vinhos","Energéticos","Cervejas","Bebidas mistas","Refrigerantes e sucos","Doces e salgadinhos","Isqueiros","Sedas e papel","Descartáveis","Chope"];
   var state = { items: [], cat: null, q: "", edit: false, canEdit: false, loaded: false, marca: null };
   var CIG = "Cigarros e acessórios"; // só balcão: nunca aparece na vitrine
   // Classifica o cigarro pela marca que aparece no nome (a primeira que bater vence).
@@ -1601,7 +1601,8 @@ window.pagamentoEfetuado = function(){
     "Isqueiros":["#b91c1c","#fef3c7","#7f1d1d"],
     "Sedas e papel":["#166534","#f0fdf4","#14532d"],
     "Descartáveis":         ["#e2e8f0","#1e293b","#1e293b"],
-    "Chope":                ["#c08a3e","#1b120c","#7a5a10"]
+    "Chope":                ["#c08a3e","#1b120c","#7a5a10"],
+    "Copão e drinks":       ["#7c2d12","#fde68a","#f59e0b"]
   };
 
   function esc(s){ return String(s).replace(/[&<>"']/g, function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]; }); }
@@ -2966,9 +2967,9 @@ window.pagamentoEfetuado = function(){
   var $ = function(id){ return document.getElementById(id); };
   var db = null, assets = null, liberado = false;
   var ITENS = [], CUSTOS = {}, MOVS = [];
-  var FATOR = {"Cigarros e acessórios":.85,"Cervejas":.65,"Chope":.55,"Whiskies":.70,"Destilados":.68,"Cachaças e vinhos":.62,"Bebidas mistas":.62,"Energéticos":.60,"Refrigerantes e sucos":.58,"Doces e salgadinhos":.55,"Descartáveis":.50,"Isqueiros":.50,"Sedas e papel":.50};
+  var FATOR = {"Copão e drinks":.45,"Cigarros e acessórios":.85,"Cervejas":.65,"Chope":.55,"Whiskies":.70,"Destilados":.68,"Cachaças e vinhos":.62,"Bebidas mistas":.62,"Energéticos":.60,"Refrigerantes e sucos":.58,"Doces e salgadinhos":.55,"Descartáveis":.50,"Isqueiros":.50,"Sedas e papel":.50};
   var CORES = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
-  var CATS_ORDEM = ["Whiskies","Destilados","Cachaças e vinhos","Energéticos","Cervejas","Bebidas mistas","Refrigerantes e sucos","Doces e salgadinhos","Cigarros e acessórios","Isqueiros","Sedas e papel","Descartáveis","Chope"];
+  var CATS_ORDEM = ["Whiskies","Destilados","Cachaças e vinhos","Energéticos","Cervejas","Bebidas mistas","Refrigerantes e sucos","Doces e salgadinhos","Cigarros e acessórios","Isqueiros","Sedas e papel","Descartáveis","Chope","Copão e drinks"];
 
   function brl(n){ return (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
   function num(n, d){ return (Number(n) || 0).toLocaleString("pt-BR", { maximumFractionDigits: d == null ? 0 : d, minimumFractionDigits: d || 0 }); }

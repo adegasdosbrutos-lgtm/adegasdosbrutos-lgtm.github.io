@@ -1427,5 +1427,77 @@
   "ordem": 434,
   "preco": 12,
   "id": "is06"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp01.jpg",
+  "nome": "Copão Whisky + Red Bull (com gelo)",
+  "ordem": 435,
+  "preco": 20,
+  "id": "cp01"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp02.jpg",
+  "nome": "Copão Whisky + Monster (com gelo)",
+  "ordem": 436,
+  "preco": 20,
+  "id": "cp02"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp03.jpg",
+  "nome": "Copão Whisky + Coca-Cola (com gelo)",
+  "ordem": 437,
+  "preco": 18,
+  "id": "cp03"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp04.jpg",
+  "nome": "Copão Gin + Red Bull (com gelo)",
+  "ordem": 438,
+  "preco": 18,
+  "id": "cp04"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp05.jpg",
+  "nome": "Copão Gin + Tônica (com gelo)",
+  "ordem": 439,
+  "preco": 15,
+  "id": "cp05"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp06.jpg",
+  "nome": "Copão Vodka + Red Bull (com gelo)",
+  "ordem": 440,
+  "preco": 15,
+  "id": "cp06"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp07.jpg",
+  "nome": "Caipiroska de limão (vodka) (com gelo)",
+  "ordem": 441,
+  "preco": 12,
+  "id": "cp07"
+ },
+ {
+  "categoria": "Copão e drinks",
+  "esgotado": false,
+  "fotoId": "copao-cp08.jpg",
+  "nome": "Caipirinha de limão (cachaça) (com gelo)",
+  "ordem": 442,
+  "preco": 10,
+  "id": "cp08"
  }
 ]
